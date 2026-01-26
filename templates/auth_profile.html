@@ -1,0 +1,1112 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - GreenHabit{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="profile-info">
+            <h1>{{ user['full_name'] or user['username'] }}</h1>
+            <p class="profile-username">@{{ user['username'] }}</p>
+            <p class="profile-email">{{ user['email'] }}</p>
+     <div class="profile-stats">
+    <div class="stat-item">
+        <!-- Line ~35 (FIXED - CORRECT): -->
+<div class="stat-value">{{ stats['total_days'] or 0 }}</div>  <!-- Will show 1 -->
+        <div class="stat-label">Days Tracked</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value">{{ stats['current_streak'] or 0 }}</div>
+        <div class="stat-label">Day Streak</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value">{{ stats['avg_score'] or 0 }}</div>
+        <div class="stat-label">Avg Score</div>
+    </div>
+</div>
+        </div>
+    </div>
+
+    <div class="profile-content">
+        <div class="profile-grid">
+            <!-- Recent Activity -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                    <div class="date-display">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span id="currentDateTime">{{ current_datetime }}</span>
+                    </div>
+                    <a href="{{ url_for('generate') }}" class="btn btn-primary btn-small">
+                        <i class="fas fa-plus"></i> Add New Entry
+                    </a>
+                </div>
+                <div class="activity-list" id="recentActivity">
+                    {% if habits %}
+                        {% for habit in habits %}
+                        <div class="activity-item">
+                            <div class="activity-date">{{ habit['date'] }}</div>
+                            <div class="activity-mode">
+                                <span class="mode-badge">
+                                    {{ habit['mode']|capitalize }} - {{ habit['assessment_type']|capitalize }}
+                                </span>
+                            </div>
+                            <div class="activity-score">
+                                <span class="score-badge" style="background: {{ 
+                                    '#2ecc71' if habit['eco_score'] >= 80 
+                                    else '#f39c12' if habit['eco_score'] >= 60 
+                                    else '#e74c3c' 
+                                }}">
+                                    {{ habit['eco_score'] }}
+                                </span>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-habits">
+                                    {% if habit.habits %}
+                                        {% for key, value in habit.habits.items() %}
+                                            {% if key not in ['mode', 'type'] %}
+                                                <span class="habit-tag" title="{{ key|capitalize }}">{{ value }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <!-- Fallback for old data structure -->
+                                        {% if habit.get('plastic') %}
+                                            <span class="habit-tag">{{ habit['plastic'] }} Plastic</span>
+                                        {% endif %}
+                                        {% if habit.get('transport') %}
+                                            <span class="habit-tag">{{ habit['transport'] }}</span>
+                                        {% endif %}
+                                        {% if habit.get('food') %}
+                                            <span class="habit-tag">{{ habit['food'] }} Food</span>
+                                        {% endif %}
+                                        {% if habit.get('energy') %}
+                                            <span class="habit-tag">{{ habit['energy'] }} Energy</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-chart-line"></i>
+                            <p>No habits tracked yet</p>
+                            <a href="{{ url_for('generate') }}" class="btn btn-primary">
+                                <i class="fas fa-calculator"></i> Calculate Your First Score
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-pie"></i> Statistics</h3>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="bestScore">{{ stats['best_score'] or 0 }}</div>
+                            <div class="stat-label">Best Score</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="currentStreak">{{ user['eco_streak'] or 0 }}</div>
+                            <div class="stat-label">Current Streak</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="avgScore">{{ stats['avg_score'] or 0 }}</div>
+                            <div class="stat-label">Average Score</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                    <div class="stat-content">
+            <div class="stat-value" id="totalDays">{{ stats['total_days'] or 0 }}</div>  <!-- CHANGED to total_days -->
+            <div class="stat-label">Total Days</div>
+        </div>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <h4>Monthly Goal Progress</h4>
+                  <div class="progress-bar">
+        <div class="progress-fill" id="monthlyProgress" style="width: {{ (stats['total_days'] or 0) / 30 * 100 }}%"></div>  <!-- CHANGED to total_days -->
+    </div>
+    <span id="progressText">{{ stats['total_days'] or 0 }}/30 days completed</span>  
+</div>
+                
+                <!-- Quick Stats Update -->
+                <div class="refresh-section">
+                    <button class="btn btn-secondary btn-sm" onclick="refreshStats()">
+                        <i class="fas fa-sync-alt"></i> Refresh Stats
+                    </button>
+                </div>
+            </div>
+
+            <!-- Account Settings -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-cog"></i> Account Settings</h3>
+                </div>
+                <div class="settings-list">
+                    <a href="#" class="settings-item" onclick="showEditProfile()">
+                        <i class="fas fa-user-edit"></i>
+                        <span>Edit Profile</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="settings-item" onclick="showNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span>Notification Settings</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="settings-item" onclick="showPrivacy()">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Privacy & Security</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{{ url_for('methodology') }}" class="settings-item">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Help & Support</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="settings-item logout" onclick="return confirmLogout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal" id="editProfileModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+            <button class="modal-close" onclick="closeModal('editProfileModal')">&times;</button>
+        </div>
+        <form id="editProfileForm">
+            <div class="form-group">
+                <label for="full_name"><i class="fas fa-user"></i> Full Name</label>
+                <input type="text" id="full_name" name="full_name" value="{{ user['full_name'] or '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                <input type="email" id="email" name="email" value="{{ user['email'] }}" required>
+            </div>
+            <div class="form-group">
+                <label for="current_password"><i class="fas fa-lock"></i> Current Password (for verification)</label>
+                <input type="password" id="current_password" name="current_password" required>
+            </div>
+            <div class="form-group">
+                <label for="new_password"><i class="fas fa-key"></i> New Password (optional)</label>
+                <input type="password" id="new_password" name="new_password">
+                <small>Leave blank to keep current password</small>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editProfileModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Notification Settings Modal -->
+<div class="modal" id="notificationModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-bell"></i> Notification Settings</h3>
+            <button class="modal-close" onclick="closeModal('notificationModal')">&times;</button>
+        </div>
+        <form id="notificationForm">
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="daily_reminder" name="daily_reminder" checked>
+                <label for="daily_reminder">
+                    <i class="fas fa-calendar-day"></i> Daily Eco Score Reminder
+                    <small>Remind me to log my eco score daily</small>
+                </label>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="streak_notifications" name="streak_notifications" checked>
+                <label for="streak_notifications">
+                    <i class="fas fa-bolt"></i> Streak Notifications
+                    <small>Notify me about my streak progress</small>
+                </label>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="weekly_report" name="weekly_report" checked>
+                <label for="weekly_report">
+                    <i class="fas fa-chart-bar"></i> Weekly Progress Report
+                    <small>Send weekly eco score summary</small>
+                </label>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="eco_tips" name="eco_tips" checked>
+                <label for="eco_tips">
+                    <i class="fas fa-lightbulb"></i> Daily Eco Tips
+                    <small>Send daily environmental tips</small>
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('notificationModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Privacy Settings Modal -->
+<div class="modal" id="privacyModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-shield-alt"></i> Privacy & Security</h3>
+            <button class="modal-close" onclick="closeModal('privacyModal')">&times;</button>
+        </div>
+        <form id="privacyForm">
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="public_profile" name="public_profile">
+                <label for="public_profile">
+                    <i class="fas fa-globe"></i> Public Profile
+                    <small>Allow others to see your eco achievements</small>
+                </label>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="data_collection" name="data_collection" checked>
+                <label for="data_collection">
+                    <i class="fas fa-database"></i> Data Collection
+                    <small>Allow anonymous data collection for research</small>
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="auto_logout"><i class="fas fa-sign-out-alt"></i> Auto Logout</label>
+                <select id="auto_logout" name="auto_logout">
+                    <option value="15">15 minutes</option>
+                    <option value="30" selected>30 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="0">Never</option>
+                </select>
+            </div>
+            <div class="danger-zone">
+                <h4><i class="fas fa-exclamation-triangle"></i> Danger Zone</h4>
+                <button type="button" class="btn btn-danger" onclick="deleteAccount()">
+                    <i class="fas fa-trash-alt"></i> Delete My Account
+                </button>
+                <small>This will permanently delete all your data</small>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('privacyModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Profile Page Styles */
+.profile-container {
+    padding: 2rem 0;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    background: white;
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 3rem;
+    border: 1px solid rgba(46, 204, 113, 0.1);
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+        padding: 2rem;
+    }
+}
+
+.profile-avatar {
+    font-size: 6rem;
+    color: #2ecc71;
+}
+
+.profile-info h1 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.profile-username {
+    color: #3498db;
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+}
+
+.profile-email {
+    color: #7f8c8d;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    text-align: center;
+    min-width: 100px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.stat-label {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+/* Date Display */
+.date-display {
+    background: rgba(46, 204, 113, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #2c3e50;
+}
+
+.date-display i {
+    color: #2ecc71;
+}
+
+/* Profile Grid */
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+@media (max-width: 992px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.profile-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(46, 204, 113, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(46, 204, 113, 0.1);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.card-header h3 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-header h3 i {
+    color: #2ecc71;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Activity List */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    transition: transform 0.2s ease;
+    flex-wrap: wrap;
+}
+
+.activity-item:hover {
+    transform: translateX(5px);
+    background: #f1f8ff;
+}
+
+.activity-date {
+    min-width: 100px;
+    color: #5d6d7e;
+    font-weight: 500;
+}
+
+.activity-mode {
+    flex-shrink: 0;
+}
+
+.mode-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: #3498db;
+    color: white;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.score-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: #2ecc71;
+    color: white;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.activity-habits {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 200px;
+}
+
+.habit-tag {
+    padding: 0.2rem 0.6rem;
+    background: rgba(46, 204, 113, 0.1);
+    color: #2c3e50;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: help;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #7f8c8d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #bdc3c7;
+}
+
+.empty-state p {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    color: #2ecc71;
+}
+
+.stat-content .stat-value {
+    font-size: 1.5rem;
+    margin-bottom: 0.2rem;
+}
+
+.stat-content .stat-label {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+}
+
+/* Progress Section */
+.progress-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e1e1e1;
+}
+
+.progress-section h4 {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin-bottom: 0.8rem;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #e1e1e1;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71, #3498db);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-section span {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.refresh-section {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+/* Settings List */
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    text-decoration: none;
+    color: #2c3e50;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.settings-item:hover {
+    background: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.settings-item i:first-child {
+    width: 20px;
+    color: #7f8c8d;
+}
+
+.settings-item span {
+    flex: 1;
+    font-size: 1rem;
+}
+
+.settings-item i:last-child {
+    color: #bdc3c7;
+}
+
+.settings-item.logout {
+    color: #e74c3c;
+}
+
+.settings-item.logout i:first-child {
+    color: #e74c3c;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e1e1e1;
+}
+
+.modal-header h3 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #7f8c8d;
+}
+
+.modal-close:hover {
+    color: #e74c3c;
+}
+
+.modal .form-group {
+    padding: 1.5rem;
+    margin: 0;
+}
+
+.modal .form-actions {
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    border-top: 1px solid #e1e1e1;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-top: 0.3rem;
+}
+
+.checkbox-group label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.checkbox-group label small {
+    color: #7f8c8d;
+    font-size: 0.85rem;
+}
+
+.danger-zone {
+    padding: 1.5rem;
+    margin: 1.5rem;
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.danger-zone h4 {
+    color: #e74c3c;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.danger-zone small {
+    display: block;
+    margin-top: 0.5rem;
+    color: #e74c3c;
+    font-size: 0.85rem;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .profile-header,
+[data-theme="dark"] .profile-card,
+[data-theme="dark"] .activity-item,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .settings-item:hover,
+[data-theme="dark"] .modal-content {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .activity-item {
+    background: rgba(46, 204, 113, 0.05);
+}
+
+[data-theme="dark"] .settings-item {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .progress-bar {
+    background: var(--border-color);
+}
+
+[data-theme="dark"] .danger-zone {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: rgba(231, 76, 60, 0.4);
+}
+
+[data-theme="dark"] .modal {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+</style>
+
+<script>
+// Get current date and time
+function updateDateTime() {
+    const now = new Date();
+    const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    };
+    document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
+}
+
+// Initialize date/time
+updateDateTime();
+setInterval(updateDateTime, 60000); // Update every minute
+
+// Check for new entries in localStorage
+function checkForNewEntries() {
+    const recentEntries = JSON.parse(localStorage.getItem('greenhabit_recent_entries') || '[]');
+    if (recentEntries.length > 0) {
+        // Add entries to the top of the activity list
+        recentEntries.forEach(entry => {
+            addActivityItem(entry);
+        });
+        // Clear localStorage after adding
+        localStorage.removeItem('greenhabit_recent_entries');
+        // Refresh stats
+        refreshStats();
+    }
+}
+
+function addActivityItem(entry) {
+    const activityList = document.getElementById('recentActivity');
+    
+    // Create activity item
+    const activityItem = document.createElement('div');
+    activityItem.className = 'activity-item';
+    
+    // Get habits HTML
+    let habitsHtml = '';
+    if (entry.habits) {
+        for (const [key, value] of Object.entries(entry.habits)) {
+            if (!['mode', 'type'].includes(key)) {
+                habitsHtml += `<span class="habit-tag" title="${key.charAt(0).toUpperCase() + key.slice(1)}">${value}</span>`;
+            }
+        }
+    }
+    
+    // Get score color
+    const score = entry.eco_score || 0;
+    let scoreColor = '#e74c3c';
+    if (score >= 80) scoreColor = '#2ecc71';
+    else if (score >= 60) scoreColor = '#f39c12';
+    
+    activityItem.innerHTML = `
+        <div class="activity-date">${entry.date}</div>
+        <div class="activity-mode">
+            <span class="mode-badge">
+                ${entry.mode ? entry.mode.charAt(0).toUpperCase() + entry.mode.slice(1) : 'Home'} - 
+                ${entry.assessment_type ? entry.assessment_type.charAt(0).toUpperCase() + entry.assessment_type.slice(1) : 'Quick'}
+            </span>
+        </div>
+        <div class="activity-score">
+            <span class="score-badge" style="background: ${scoreColor}">
+                ${score}
+            </span>
+        </div>
+        <div class="activity-details">
+            <div class="activity-habits">
+                ${habitsHtml}
+            </div>
+        </div>
+    `;
+    
+    // Add to the top of the list
+    if (activityList.firstChild) {
+        activityList.insertBefore(activityItem, activityList.firstChild);
+    } else {
+        activityList.appendChild(activityItem);
+    }
+}
+
+// Modal functions
+function showEditProfile() {
+    document.getElementById('editProfileModal').style.display = 'flex';
+}
+
+function showNotifications() {
+    document.getElementById('notificationModal').style.display = 'flex';
+}
+
+function showPrivacy() {
+    document.getElementById('privacyModal').style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// Form submissions
+document.getElementById('editProfileForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        const response = await fetch('/api/profile/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Profile updated successfully!');
+            closeModal('editProfileModal');
+            // Refresh page to show updated data
+            location.reload();
+        } else {
+            alert('Error: ' + (result.error || 'Failed to update profile'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+});
+
+document.getElementById('notificationForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const settings = Object.fromEntries(formData.entries());
+    
+    // Save to localStorage
+    localStorage.setItem('greenhabit_notifications', JSON.stringify(settings));
+    
+    alert('Notification settings saved!');
+    closeModal('notificationModal');
+});
+
+document.getElementById('privacyForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const settings = Object.fromEntries(formData.entries());
+    
+    // Save to localStorage
+    localStorage.setItem('greenhabit_privacy', JSON.stringify(settings));
+    
+    alert('Privacy settings saved!');
+    closeModal('privacyModal');
+});
+
+// Delete account function
+function deleteAccount() {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.')) {
+        // Call delete account API
+        fetch('/api/profile/delete', {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Account deleted successfully.');
+                window.location.href = "{{ url_for('home') }}";
+            } else {
+                alert('Error: ' + (data.error || 'Failed to delete account'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    }
+}
+
+// Confirm logout
+function confirmLogout() {
+    return confirm('Are you sure you want to logout?');
+}
+
+// Refresh stats
+async function refreshStats() {
+    try {
+        const response = await fetch('/api/user/stats');
+        const data = await response.json();
+        
+        // Update displayed stats
+        document.getElementById('bestScore').textContent = data.best_score;
+        document.getElementById('currentStreak').textContent = data.eco_streak;
+        document.getElementById('avgScore').textContent = data.avg_score;
+        document.getElementById('totalDays').textContent = data.total_entries;
+        
+        // Update progress bar
+        const progressPercent = (data.total_entries / 30) * 100;
+        document.getElementById('monthlyProgress').style.width = progressPercent + '%';
+        document.getElementById('progressText').textContent = data.total_entries + '/30 days completed';
+        
+        // Flash animation
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach(card => {
+            card.style.backgroundColor = 'rgba(46, 204, 113, 0.1)';
+            setTimeout(() => {
+                card.style.backgroundColor = '';
+            }, 300);
+        });
+        
+        alert('Stats refreshed!');
+    } catch (error) {
+        console.error('Error refreshing stats:', error);
+        alert('Failed to refresh stats. Please try again.');
+    }
+}
+
+// Load notification settings from localStorage
+function loadNotificationSettings() {
+    const settings = JSON.parse(localStorage.getItem('greenhabit_notifications') || '{}');
+    Object.keys(settings).forEach(key => {
+        const checkbox = document.getElementById(key);
+        if (checkbox) {
+            checkbox.checked = settings[key] === 'on';
+        }
+    });
+}
+
+// Load privacy settings from localStorage
+function loadPrivacySettings() {
+    const settings = JSON.parse(localStorage.getItem('greenhabit_privacy') || '{}');
+    Object.keys(settings).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+            if (element.type === 'checkbox') {
+                element.checked = settings[key] === 'on';
+            } else {
+                element.value = settings[key];
+            }
+        }
+    });
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Check for new entries
+    checkForNewEntries();
+    
+    // Load settings
+    loadNotificationSettings();
+    loadPrivacySettings();
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    };
+});
+</script>
+{% endblock %}

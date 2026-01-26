@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Methodology - GreenHabit{% endblock %}
+
+{% block content %}
+<div class="methodology-container">
+    <div class="methodology-header">
+        <h1><i class="fas fa-book"></i> Our Methodology</h1>
+        <p>Learn how we calculate your eco score and help you live more sustainably</p>
+    </div>
+
+    <div class="methodology-content">
+        <div class="methodology-card">
+            <h2><i class="fas fa-calculator"></i> Scoring System</h2>
+            <p>Our eco score is calculated on a scale of 0-100, with 100 representing the most eco-friendly day possible.</p>
+            
+            <div class="scoring-section">
+                <h3>Category Breakdown (25 points each):</h3>
+                
+                <div class="category-card">
+                    <h4><i class="fas fa-water"></i> Plastic Usage (25 points)</h4>
+                    <ul class="scoring-list">
+                        <li><strong>No plastic (25 pts):</strong> Used no single-use plastics</li>
+                        <li><strong>Low plastic (15 pts):</strong> Minimal plastic usage</li>
+                        <li><strong>High plastic (5 pts):</strong> Significant plastic usage</li>
+                        <li><strong>Used plastic (5 pts):</strong> Used plastic items</li>
+                    </ul>
+                </div>
+
+                <div class="category-card">
+                    <h4><i class="fas fa-car"></i> Transportation (25 points)</h4>
+                    <ul class="scoring-list">
+                        <li><strong>Walking (25 pts):</strong> Walked for all trips</li>
+                        <li><strong>Bicycle (25 pts):</strong> Used bicycle for transportation</li>
+                        <li><strong>Public transport (20 pts):</strong> Used buses, trains, or metro</li>
+                        <li><strong>Bike (10 pts):</strong> Used motorcycle or scooter</li>
+                        <li><strong>Car (5 pts):</strong> Used personal car</li>
+                    </ul>
+                </div>
+
+                <div class="category-card">
+                    <h4><i class="fas fa-utensils"></i> Food Choice (25 points)</h4>
+                    <ul class="scoring-list">
+                        <li><strong>Vegetarian (25 pts):</strong> Plant-based meals only</li>
+                        <li><strong>Mixed (15 pts):</strong> Combination of vegetarian and non-vegetarian</li>
+                        <li><strong>Non-vegetarian (5 pts):</strong> Meat or fish included in meals</li>
+                    </ul>
+                </div>
+
+                <div class="category-card">
+                    <h4><i class="fas fa-bolt"></i> Energy Usage (25 points)</h4>
+                    <ul class="scoring-list">
+                        <li><strong>Low (25 pts):</strong> Minimal energy consumption</li>
+                        <li><strong>Medium (15 pts):</strong> Moderate energy usage</li>
+                        <li><strong>High (5 pts):</strong> High energy consumption</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="methodology-card">
+            <h2><i class="fas fa-chart-bar"></i> Score Interpretation</h2>
+            
+            <div class="interpretation-grid">
+                <div class="interpretation-card green">
+                    <h3>80-100: Excellent</h3>
+                    <p>Outstanding eco-friendly habits! You're making a significant positive impact on the environment.</p>
+                </div>
+                
+                <div class="interpretation-card yellow">
+                    <h3>60-79: Moderate</h3>
+                    <p>Good effort with room for improvement. Small changes can significantly boost your score.</p>
+                </div>
+                
+                <div class="interpretation-card red">
+                    <h3>0-59: Needs Improvement</h3>
+                    <p>Opportunity to adopt more sustainable habits. Check our tips for easy improvements.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="methodology-card">
+            <h2><i class="fas fa-lightbulb"></i> Personalized Tips Generation</h2>
+            <p>Our system analyzes your lowest-scoring category to provide targeted recommendations:</p>
+            
+            <div class="tips-methodology">
+                <div class="tip-method">
+                    <h4><i class="fas fa-search"></i> 1. Category Analysis</h4>
+                    <p>We identify which of the four categories has your lowest score.</p>
+                </div>
+                
+                <div class="tip-method">
+                    <h4><i class="fas fa-cogs"></i> 2. Tip Selection</h4>
+                    <p>Based on the weakest category, we select the most relevant improvement tip.</p>
+                </div>
+                
+                <div class="tip-method">
+                    <h4><i class="fas fa-rocket"></i> 3. Actionable Advice</h4>
+                    <p>You receive specific, practical advice to improve that particular habit.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="methodology-card">
+            <h2><i class="fas fa-seedling"></i> Environmental Impact</h2>
+            <p>Every point in your eco score represents real environmental benefits:</p>
+            
+            <div class="impact-grid">
+                <div class="impact-item">
+                    <div class="impact-icon">
+                        <i class="fas fa-tree"></i>
+                    </div>
+                    <h4>Carbon Reduction</h4>
+                    <p>Higher scores correlate with lower carbon emissions</p>
+                </div>
+                
+                <div class="impact-item">
+                    <div class="impact-icon">
+                        <i class="fas fa-recycle"></i>
+                    </div>
+                    <h4>Waste Reduction</h4>
+                    <p>Better plastic habits mean less landfill waste</p>
+                </div>
+                
+                <div class="impact-item">
+                    <div class="impact-icon">
+                        <i class="fas fa-water"></i>
+                    </div>
+                    <h4>Resource Conservation</h4>
+                    <p>Lower energy usage preserves natural resources</p>
+                </div>
+                
+                <div class="impact-item">
+                    <div class="impact-icon">
+                        <i class="fas fa-wind"></i>
+                    </div>
+                    <h4>Air Quality</h4>
+                    <p>Sustainable transport improves air quality</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="methodology-footer">
+        <a href="{{ url_for('generate') }}" class="btn btn-primary">
+            <i class="fas fa-calculator"></i> Try the Calculator
+        </a>
+    </div>
+</div>
+{% endblock %}

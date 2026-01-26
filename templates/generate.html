@@ -1,0 +1,1205 @@
+{% extends "base.html" %}
+
+{% block title %}Calculate Score - GreenHabit{% endblock %}
+
+{% block content %}
+<div class="generate-container">
+    <div class="generate-header">
+        <h1><i class="fas fa-calculator"></i> Calculate Your Eco Score</h1>
+        <p>Select your mode and assessment type to calculate your environmental impact score.</p>
+    </div>
+
+    <div class="generate-content">
+        <!-- Mode Selection -->
+        <div class="mode-selection-container" id="modeSelectionContainer">
+            <div class="mode-card">
+                <div class="mode-header">
+                    <h2><i class="fas fa-cogs"></i> Select Assessment Mode</h2>
+                    <p>Choose the type of assessment that best fits your needs</p>
+                </div>
+                
+                <div class="mode-options">
+                    <!-- User Type Selection -->
+                    <div class="mode-section">
+                        <h3><i class="fas fa-user"></i> User Type</h3>
+                        <div class="mode-grid">
+                            <div class="mode-option" data-mode="home">
+                                <div class="mode-icon">
+                                    <i class="fas fa-home"></i>
+                                </div>
+                                <h4>Home / Personal</h4>
+                                <p>Calculate your personal environmental footprint for daily living</p>
+                                <div class="mode-details">
+                                    <span class="tag"><i class="fas fa-clock"></i> 2-3 min</span>
+                                    <span class="tag"><i class="fas fa-question-circle"></i> 4-8 questions</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mode-option" data-mode="business">
+                                <div class="mode-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <h4>Business / Organization</h4>
+                                <p>Calculate environmental impact for businesses or organizations</p>
+                                <div class="mode-details">
+                                    <span class="tag"><i class="fas fa-clock"></i> 5-10 min</span>
+                                    <span class="tag"><i class="fas fa-question-circle"></i> 8-15 questions</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assessment Type Selection -->
+                    <div class="mode-section" id="assessmentTypeSection" style="display: none;">
+                        <h3><i class="fas fa-tachometer-alt"></i> Assessment Type</h3>
+                        <div class="mode-grid">
+                            <div class="mode-option" data-type="quick">
+                                <div class="mode-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <h4>Quick Assessment</h4>
+                                <p>Basic questions for a fast eco score calculation</p>
+                                <div class="mode-details">
+                                    <span class="tag"><i class="fas fa-clock"></i> 1-2 min</span>
+                                    <span class="tag"><i class="fas fa-star"></i> Basic insights</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mode-option" data-type="detailed">
+                                <div class="mode-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <h4>Detailed Assessment</h4>
+                                <p>Comprehensive questions for in-depth analysis</p>
+                                <div class="mode-details">
+                                    <span class="tag"><i class="fas fa-clock"></i> 3-5 min</span>
+                                    <span class="tag"><i class="fas fa-star"></i> Advanced insights</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Mode Display -->
+                    <div class="selected-mode-display" id="selectedModeDisplay" style="display: none;">
+                        <div class="selected-mode-card">
+                            <h3><i class="fas fa-check-circle"></i> Selected Mode</h3>
+                            <div class="selected-mode-info">
+                                <div class="mode-badge" id="selectedModeBadge">
+                                    <span id="selectedModeText">Home - Quick Assessment</span>
+                                </div>
+                                <button class="btn btn-secondary btn-sm" onclick="resetModeSelection()">
+                                    <i class="fas fa-redo"></i> Change Mode
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block" id="startAssessmentBtn" style="display: none;">
+                    <i class="fas fa-play"></i> Start Assessment
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Form -->
+        <div class="form-container" id="formContainer" style="display: none;">
+            <div class="form-card">
+                <div class="form-header">
+                    <h2 id="formTitle">Your Daily Habits</h2>
+                    <p id="formSubtitle">Select options for each category to calculate your score</p>
+                    <div class="form-mode-info">
+                        <span class="mode-indicator" id="formModeIndicator"></span>
+                    </div>
+                </div>
+                
+                <form id="ecoForm">
+                    <!-- Dynamic questions will be inserted here -->
+                    <div id="questionsContainer"></div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="calculateBtn">
+                            <i class="fas fa-calculator"></i> Calculate Eco Score
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="nextBtn" style="display: none;">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-container" id="resultsContainer" style="display: none;">
+            <div class="results-card">
+                <div class="results-header">
+                    <h2><i class="fas fa-chart-pie"></i> Your Results</h2>
+                    <p>Based on your input, here's your environmental impact assessment</p>
+                    <div class="results-mode-info">
+                        <span class="mode-indicator" id="resultsModeIndicator"></span>
+                    </div>
+                </div>
+
+                <div class="results-content">
+                    <!-- Score Display -->
+                    <div class="score-display">
+                        <div class="score-circle" id="scoreCircle">
+                            <span class="score-value" id="scoreValue">0</span>
+                            <span class="score-total">/100</span>
+                        </div>
+                        <div class="score-info">
+                            <h3 id="scoreLabel">Eco Score</h3>
+                            <div class="score-category" id="scoreCategory"></div>
+                        </div>
+                    </div>
+
+                    <!-- Score Breakdown -->
+                    <div class="breakdown-section">
+                        <h3><i class="fas fa-list-alt"></i> Score Breakdown</h3>
+                        <div class="breakdown-grid" id="breakdownGrid">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Personalized Tip -->
+                    <div class="tip-section">
+                        <h3><i class="fas fa-lightbulb"></i> Personalized Eco Tip</h3>
+                        <div class="tip-card" id="tipContent">
+                            <!-- Tip will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Habit Summary -->
+                    <div class="habits-section">
+                        <h3><i class="fas fa-clipboard-list"></i> Your Logged Habits</h3>
+                        <div class="habits-grid" id="habitsGrid">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-redo"></i> Calculate Again
+                        </button>
+                        <button class="btn btn-primary" onclick="redirectToProfile()">
+                            <i class="fas fa-user"></i> View Profile & History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-container" id="loadingContainer" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-leaf fa-spin"></i>
+            </div>
+            <p>Calculating your eco score...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Mode selection variables
+let selectedMode = null; // 'home' or 'business'
+let selectedType = null; // 'quick' or 'detailed'
+let currentQuestionSet = 0;
+let formData = {};
+
+// Question sets based on modes
+const questionSets = {
+    home: {
+        quick: [
+            {
+                id: 'plastic',
+                label: '<i class="fas fa-water"></i> Plastic Usage',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select your plastic usage...' },
+                    { value: 'No', label: 'No plastic' },
+                    { value: 'Low', label: 'Low plastic' },
+                    { value: 'High', label: 'High plastic' },
+                    { value: 'Yes', label: 'Used plastic' }
+                ],
+                hint: 'Choose based on your plastic consumption today'
+            },
+            {
+                id: 'transport',
+                label: '<i class="fas fa-car"></i> Transportation',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select transportation method...' },
+                    { value: 'Walking', label: 'Walking' },
+                    { value: 'Bicycle', label: 'Bicycle' },
+                    { value: 'Public transport', label: 'Public transport' },
+                    { value: 'Car', label: 'Car' }
+                ],
+                hint: 'How did you commute today?'
+            },
+            {
+                id: 'food',
+                label: '<i class="fas fa-utensils"></i> Food Choice',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select your food choice...' },
+                    { value: 'Vegetarian', label: 'Vegetarian' },
+                    { value: 'Mixed', label: 'Mixed' },
+                    { value: 'Non-vegetarian', label: 'Non-vegetarian' }
+                ],
+                hint: 'What type of food did you consume today?'
+            },
+            {
+                id: 'energy',
+                label: '<i class="fas fa-bolt"></i> Energy Usage',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select energy usage...' },
+                    { value: 'Low', label: 'Low' },
+                    { value: 'Medium', label: 'Medium' },
+                    { value: 'High', label: 'High' }
+                ],
+                hint: 'Estimate your energy consumption today'
+            }
+        ],
+        detailed: [
+            {
+                id: 'plastic',
+                label: '<i class="fas fa-water"></i> Plastic Usage',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select your plastic usage...' },
+                    { value: 'No', label: 'No plastic used today' },
+                    { value: 'Low', label: 'Minimal plastic (1-2 items)' },
+                    { value: 'Medium', label: 'Moderate plastic (3-5 items)' },
+                    { value: 'High', label: 'High plastic (6+ items)' },
+                    { value: 'Recycled', label: 'Used but all recycled' }
+                ],
+                hint: 'Consider all single-use plastics used today'
+            },
+            {
+                id: 'transport',
+                label: '<i class="fas fa-car"></i> Transportation',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select primary transportation...' },
+                    { value: 'Walking', label: 'Walking only' },
+                    { value: 'Bicycle', label: 'Bicycle only' },
+                    { value: 'Public transport', label: 'Public transport (bus/train)' },
+                    { value: 'Electric vehicle', label: 'Electric vehicle' },
+                    { value: 'Hybrid car', label: 'Hybrid car' },
+                    { value: 'Gas car', label: 'Gasoline car' },
+                    { value: 'Multiple', label: 'Multiple methods' }
+                ],
+                hint: 'Primary transportation method used today'
+            },
+            {
+                id: 'food',
+                label: '<i class="fas fa-utensils"></i> Food Consumption',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select your meals...' },
+                    { value: 'Vegan', label: 'All vegan meals' },
+                    { value: 'Vegetarian', label: 'All vegetarian meals' },
+                    { value: 'Mostly veg', label: 'Mostly vegetarian (1 non-veg)' },
+                    { value: 'Mixed', label: 'Mixed diet' },
+                    { value: 'Mostly meat', label: 'Mostly meat-based' },
+                    { value: 'Local produce', label: 'All local/organic food' }
+                ],
+                hint: 'Type of meals consumed today'
+            },
+            {
+                id: 'energy',
+                label: '<i class="fas fa-bolt"></i> Home Energy Usage',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select energy usage level...' },
+                    { value: 'Very Low', label: 'Very low (conservation mode)' },
+                    { value: 'Low', label: 'Low (energy efficient)' },
+                    { value: 'Medium', label: 'Medium (average usage)' },
+                    { value: 'High', label: 'High (above average)' },
+                    { value: 'Renewable', label: 'Using renewable energy' }
+                ],
+                hint: 'Total home energy consumption today'
+            },
+            {
+                id: 'water',
+                label: '<i class="fas fa-tint"></i> Water Usage',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select water usage...' },
+                    { value: 'Conservative', label: 'Very conservative' },
+                    { value: 'Low', label: 'Low usage' },
+                    { value: 'Medium', label: 'Medium usage' },
+                    { value: 'High', label: 'High usage' }
+                ],
+                hint: 'Daily water consumption habits'
+            },
+            {
+                id: 'waste',
+                label: '<i class="fas fa-trash-alt"></i> Waste Management',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select waste management...' },
+                    { value: 'Compost', label: 'Full composting' },
+                    { value: 'Recycle All', label: 'All waste recycled' },
+                    { value: 'Most Recycled', label: 'Most waste recycled' },
+                    { value: 'Some Recycled', label: 'Some recycling' },
+                    { value: 'Landfill', label: 'Most to landfill' }
+                ],
+                hint: 'How do you manage your waste?'
+            }
+        ]
+    },
+    business: {
+        quick: [
+            {
+                id: 'energy',
+                label: '<i class="fas fa-bolt"></i> Business Energy Usage',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select energy usage...' },
+                    { value: 'Renewable', label: '100% renewable' },
+                    { value: 'Efficient', label: 'Energy efficient' },
+                    { value: 'Average', label: 'Average usage' },
+                    { value: 'High', label: 'High consumption' }
+                ],
+                hint: 'Primary energy source for business operations'
+            },
+            {
+                id: 'transport',
+                label: '<i class="fas fa-truck"></i> Business Transportation',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select transportation...' },
+                    { value: 'Remote', label: 'Mostly remote work' },
+                    { value: 'Public', label: 'Public transport encouraged' },
+                    { value: 'Mixed', label: 'Mixed methods' },
+                    { value: 'Vehicle', label: 'Company vehicles' }
+                ],
+                hint: 'Employee commuting and business travel'
+            },
+            {
+                id: 'waste',
+                label: '<i class="fas fa-recycle"></i> Waste Management',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select waste policy...' },
+                    { value: 'Zero Waste', label: 'Zero waste goal' },
+                    { value: 'Recycle Most', label: 'Most waste recycled' },
+                    { value: 'Some Recycle', label: 'Some recycling' },
+                    { value: 'Basic', label: 'Basic waste management' }
+                ],
+                hint: 'Business waste management practices'
+            },
+            {
+                id: 'supply',
+                label: '<i class="fas fa-box"></i> Supply Chain',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select supply chain...' },
+                    { value: 'Sustainable', label: 'Sustainable suppliers' },
+                    { value: 'Local', label: 'Mostly local suppliers' },
+                    { value: 'Mixed', label: 'Mixed suppliers' },
+                    { value: 'Standard', label: 'Standard suppliers' }
+                ],
+                hint: 'Sustainability of your supply chain'
+            }
+        ],
+        detailed: [
+            {
+                id: 'energy',
+                label: '<i class="fas fa-bolt"></i> Energy Consumption',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select energy profile...' },
+                    { value: 'Renewable 100', label: '100% renewable energy' },
+                    { value: 'Renewable 50', label: '50%+ renewable energy' },
+                    { value: 'Efficient', label: 'Energy efficient systems' },
+                    { value: 'LED Lighting', label: 'LED lighting installed' },
+                    { value: 'Standard', label: 'Standard energy usage' },
+                    { value: 'High', label: 'High energy consumption' }
+                ],
+                hint: 'Business energy sources and efficiency'
+            },
+            {
+                id: 'carbon',
+                label: '<i class="fas fa-industry"></i> Carbon Footprint',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select carbon policy...' },
+                    { value: 'Carbon Neutral', label: 'Carbon neutral certified' },
+                    { value: 'Offsetting', label: 'Carbon offset program' },
+                    { value: 'Measuring', label: 'Measuring footprint' },
+                    { value: 'Planning', label: 'Planning reductions' },
+                    { value: 'Basic', label: 'Basic awareness' }
+                ],
+                hint: 'Carbon management strategy'
+            },
+            {
+                id: 'waste',
+                label: '<i class="fas fa-recycle"></i> Waste & Recycling',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select waste strategy...' },
+                    { value: 'Zero Waste', label: 'Zero waste certified' },
+                    { value: 'Composting', label: 'Full composting program' },
+                    { value: 'Recycle All', label: 'Comprehensive recycling' },
+                    { value: 'Recycle Some', label: 'Partial recycling' },
+                    { value: 'Basic', label: 'Basic waste disposal' }
+                ],
+                hint: 'Waste reduction and recycling programs'
+            },
+            {
+                id: 'water',
+                label: '<i class="fas fa-tint"></i> Water Management',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select water management...' },
+                    { value: 'Rainwater', label: 'Rainwater harvesting' },
+                    { value: 'Greywater', label: 'Greywater recycling' },
+                    { value: 'Efficient', label: 'Water efficient fixtures' },
+                    { value: 'Monitoring', label: 'Water usage monitoring' },
+                    { value: 'Standard', label: 'Standard usage' }
+                ],
+                hint: 'Water conservation measures'
+            },
+            {
+                id: 'supply',
+                label: '<i class="fas fa-boxes"></i> Sustainable Supply Chain',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select supply chain...' },
+                    { value: 'Certified', label: 'All suppliers certified sustainable' },
+                    { value: 'Local', label: '80%+ local suppliers' },
+                    { value: 'Audited', label: 'Regular supplier audits' },
+                    { value: 'Some Local', label: 'Some local suppliers' },
+                    { value: 'Standard', label: 'Standard supply chain' }
+                ],
+                hint: 'Sustainability of suppliers and partners'
+            },
+            {
+                id: 'transport',
+                label: '<i class="fas fa-shipping-fast"></i> Logistics & Transport',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select logistics...' },
+                    { value: 'Electric Fleet', label: 'Electric vehicle fleet' },
+                    { value: 'Hybrid Fleet', label: 'Hybrid vehicle fleet' },
+                    { value: 'Route Opt', label: 'Optimized delivery routes' },
+                    { value: 'Remote Work', label: 'Remote work options' },
+                    { value: 'Standard', label: 'Standard logistics' }
+                ],
+                hint: 'Transportation and logistics efficiency'
+            },
+            {
+                id: 'products',
+                label: '<i class="fas fa-leaf"></i> Product Sustainability',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select product policy...' },
+                    { value: 'Circular', label: 'Circular economy products' },
+                    { value: 'Biodegradable', label: 'Biodegradable products' },
+                    { value: 'Recycled', label: 'Recycled materials' },
+                    { value: 'Some Green', label: 'Some sustainable products' },
+                    { value: 'Standard', label: 'Standard products' }
+                ],
+                hint: 'Environmental impact of products/services'
+            },
+            {
+                id: 'employee',
+                label: '<i class="fas fa-users"></i> Employee Engagement',
+                type: 'select',
+                options: [
+                    { value: '', label: 'Select engagement...' },
+                    { value: 'Green Team', label: 'Active green team' },
+                    { value: 'Training', label: 'Sustainability training' },
+                    { value: 'Programs', label: 'Green programs' },
+                    { value: 'Basic', label: 'Basic awareness' },
+                    { value: 'None', label: 'No specific programs' }
+                ],
+                hint: 'Employee involvement in sustainability'
+            }
+        ]
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Mode selection
+    const modeOptions = document.querySelectorAll('.mode-option[data-mode]');
+    const typeOptions = document.querySelectorAll('.mode-option[data-type]');
+    const assessmentTypeSection = document.getElementById('assessmentTypeSection');
+    const startAssessmentBtn = document.getElementById('startAssessmentBtn');
+    const selectedModeDisplay = document.getElementById('selectedModeDisplay');
+    const selectedModeBadge = document.getElementById('selectedModeBadge');
+    const selectedModeText = document.getElementById('selectedModeText');
+
+    // Form elements
+    const formContainer = document.getElementById('formContainer');
+    const formTitle = document.getElementById('formTitle');
+    const formSubtitle = document.getElementById('formSubtitle');
+    const formModeIndicator = document.getElementById('formModeIndicator');
+    const questionsContainer = document.getElementById('questionsContainer');
+    const modeSelectionContainer = document.getElementById('modeSelectionContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    // Mode selection handlers
+    modeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove active class from all mode options
+            modeOptions.forEach(opt => opt.classList.remove('active'));
+            
+            // Add active class to selected option
+            this.classList.add('active');
+            
+            // Set selected mode
+            selectedMode = this.dataset.mode;
+            
+            // Show assessment type selection
+            assessmentTypeSection.style.display = 'block';
+            assessmentTypeSection.scrollIntoView({ behavior: 'smooth' });
+            
+            // Reset type selection
+            typeOptions.forEach(opt => opt.classList.remove('active'));
+            selectedType = null;
+            startAssessmentBtn.style.display = 'none';
+        });
+    });
+
+    // Assessment type selection handlers
+    typeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove active class from all type options
+            typeOptions.forEach(opt => opt.classList.remove('active'));
+            
+            // Add active class to selected option
+            this.classList.add('active');
+            
+            // Set selected type
+            selectedType = this.dataset.type;
+            
+            // Update selected mode display
+            const modeName = selectedMode === 'home' ? 'Home / Personal' : 'Business / Organization';
+            const typeName = selectedType === 'quick' ? 'Quick Assessment' : 'Detailed Assessment';
+            selectedModeText.textContent = `${modeName} - ${typeName}`;
+            
+            // Show selected mode display and start button
+            selectedModeDisplay.style.display = 'block';
+            startAssessmentBtn.style.display = 'block';
+            
+            // Scroll to start button
+            startAssessmentBtn.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    // Start assessment button handler
+    startAssessmentBtn.addEventListener('click', function() {
+        // Hide mode selection
+        modeSelectionContainer.style.display = 'none';
+        
+        // Show form
+        formContainer.style.display = 'block';
+        
+        // Set form title and subtitle based on mode
+        const modeName = selectedMode === 'home' ? 'Personal' : 'Business';
+        const typeName = selectedType === 'quick' ? 'Quick' : 'Detailed';
+        formTitle.textContent = `${modeName} ${typeName} Assessment`;
+        formSubtitle.textContent = `Answer the following ${typeName.toLowerCase()} questions about your ${selectedMode === 'home' ? 'daily habits' : 'business operations'}`;
+        
+        // Set mode indicator
+        formModeIndicator.textContent = `${modeName} - ${typeName}`;
+        
+        // Load questions
+        loadQuestions();
+        
+        // Scroll to form
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    function loadQuestions() {
+        const questions = questionSets[selectedMode][selectedType];
+        questionsContainer.innerHTML = '';
+        
+        if (selectedType === 'quick') {
+            // Show all questions at once for quick assessment
+            questions.forEach((question, index) => {
+                questionsContainer.appendChild(createQuestionElement(question, index));
+            });
+        } else {
+            // Show first question for detailed assessment
+            currentQuestionSet = 0;
+            questionsContainer.appendChild(createQuestionElement(questions[0], 0));
+            updateNavigationButtons(questions.length);
+        }
+    }
+
+    function createQuestionElement(question, index) {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'form-group';
+        questionDiv.dataset.questionId = question.id;
+        
+        let html = `
+            <label for="${question.id}">
+                ${question.label}
+            </label>
+            <select id="${question.id}" name="${question.id}" required>
+        `;
+        
+        question.options.forEach(option => {
+            html += `<option value="${option.value}">${option.label}</option>`;
+        });
+        
+        html += `
+            </select>
+            <div class="form-hint">${question.hint}</div>
+        `;
+        
+        questionDiv.innerHTML = html;
+        return questionDiv;
+    }
+
+    function updateNavigationButtons(totalQuestions) {
+        if (selectedType === 'detailed') {
+            prevBtn.style.display = currentQuestionSet > 0 ? 'flex' : 'none';
+            nextBtn.style.display = currentQuestionSet < totalQuestions - 1 ? 'flex' : 'none';
+            calculateBtn.style.display = currentQuestionSet === totalQuestions - 1 ? 'flex' : 'none';
+        }
+    }
+
+    // Navigation button handlers
+    nextBtn.addEventListener('click', function() {
+        const questions = questionSets[selectedMode][selectedType];
+        const currentQuestion = questions[currentQuestionSet];
+        const selectElement = document.getElementById(currentQuestion.id);
+        
+        // Save answer
+        formData[currentQuestion.id] = selectElement.value;
+        
+        // Move to next question
+        currentQuestionSet++;
+        questionsContainer.innerHTML = '';
+        questionsContainer.appendChild(createQuestionElement(questions[currentQuestionSet], currentQuestionSet));
+        updateNavigationButtons(questions.length);
+        
+        // Restore previous answer if exists
+        if (formData[questions[currentQuestionSet].id]) {
+            document.getElementById(questions[currentQuestionSet].id).value = formData[questions[currentQuestionSet].id];
+        }
+    });
+
+    prevBtn.addEventListener('click', function() {
+        const questions = questionSets[selectedMode][selectedType];
+        const currentQuestion = questions[currentQuestionSet];
+        const selectElement = document.getElementById(currentQuestion.id);
+        
+        // Save current answer
+        formData[currentQuestion.id] = selectElement.value;
+        
+        // Move to previous question
+        currentQuestionSet--;
+        questionsContainer.innerHTML = '';
+        questionsContainer.appendChild(createQuestionElement(questions[currentQuestionSet], currentQuestionSet));
+        updateNavigationButtons(questions.length);
+        
+        // Restore previous answer
+        if (formData[questions[currentQuestionSet].id]) {
+            document.getElementById(questions[currentQuestionSet].id).value = formData[questions[currentQuestionSet].id];
+        }
+    });
+
+    // Form submission
+    const form = document.getElementById('ecoForm');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const loadingContainer = document.getElementById('loadingContainer');
+    const resultsModeIndicator = document.getElementById('resultsModeIndicator');
+    
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Collect all form data
+            const questions = questionSets[selectedMode][selectedType];
+            const formDataObj = {};
+            
+            if (selectedType === 'quick') {
+                // Collect all answers for quick assessment
+                questions.forEach(question => {
+                    const element = document.getElementById(question.id);
+                    formDataObj[question.id] = element.value;
+                });
+            } else {
+                // Collect current answer and all saved answers for detailed assessment
+                const currentQuestion = questions[currentQuestionSet];
+                const currentElement = document.getElementById(currentQuestion.id);
+                formDataObj[currentQuestion.id] = currentElement.value;
+                
+                // Add all previously saved answers
+                Object.keys(formData).forEach(key => {
+                    if (key !== currentQuestion.id) {
+                        formDataObj[key] = formData[key];
+                    }
+                });
+            }
+            
+            // Show loading
+            loadingContainer.style.display = 'block';
+            resultsContainer.style.display = 'none';
+            
+            try {
+                // Send data to server with mode information
+                const response = await fetch('/api/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ...formDataObj,
+                        mode: selectedMode,
+                        type: selectedType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Hide loading
+                    loadingContainer.style.display = 'none';
+                    
+                    // Set results mode indicator
+                    const modeName = selectedMode === 'home' ? 'Personal' : 'Business';
+                    const typeName = selectedType === 'quick' ? 'Quick' : 'Detailed';
+                    resultsModeIndicator.textContent = `${modeName} - ${typeName}`;
+                    
+                    // Update results
+                    updateResults(data);
+                    
+                    // Show results with animation
+                    resultsContainer.style.display = 'block';
+                    resultsContainer.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Error calculating score: ' + (data.error || 'Unknown error'));
+                    loadingContainer.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                loadingContainer.style.display = 'none';
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
+    
+    function updateResults(data) {
+        // Update score display
+        document.getElementById('scoreValue').textContent = data.eco_score;
+        document.getElementById('scoreLabel').textContent = data.score_label;
+        
+        // Set score circle color
+        const scoreCircle = document.getElementById('scoreCircle');
+        scoreCircle.style.background = getScoreGradient(data.eco_score);
+        
+        // Update score category
+        const scoreCategory = document.getElementById('scoreCategory');
+        scoreCategory.textContent = data.score_label;
+        scoreCategory.style.backgroundColor = getScoreColor(data.eco_score);
+        scoreCategory.style.color = 'white';
+        scoreCategory.style.padding = '0.5rem 1rem';
+        scoreCategory.style.borderRadius = '20px';
+        scoreCategory.style.display = 'inline-block';
+        scoreCategory.style.marginTop = '0.5rem';
+        
+        // Update tip content
+        document.getElementById('tipContent').innerHTML = `
+            <p>${data.tip}</p>
+        `;
+        
+        // Update breakdown grid
+        updateBreakdownGrid(data);
+        
+        // Update habits grid
+        updateHabitsGrid(data.habits || formData);
+    }
+    
+    function getScoreGradient(score) {
+        if (score >= 80) {
+            return 'linear-gradient(135deg, #2ecc71, #27ae60)';
+        } else if (score >= 60) {
+            return 'linear-gradient(135deg, #f39c12, #d35400)';
+        } else {
+            return 'linear-gradient(135deg, #e74c3c, #c0392b)';
+        }
+    }
+    
+    function getScoreColor(score) {
+        if (score >= 80) {
+            return '#2ecc71';
+        } else if (score >= 60) {
+            return '#f39c12';
+        } else {
+            return '#e74c3c';
+        }
+    }
+    
+    function updateBreakdownGrid(data) {
+        const breakdownGrid = document.getElementById('breakdownGrid');
+        const questions = questionSets[selectedMode][selectedType];
+        
+        let html = '';
+        questions.forEach(question => {
+            const value = data.habits ? data.habits[question.id] : formData[question.id];
+            const score = calculateScore(question.id, value);
+            const maxScore = 100 / questions.length;
+            
+            html += `
+                <div class="breakdown-item">
+                    <h4>${question.label.replace(/<[^>]*>/g, '')}</h4>
+                    <div class="score">${Math.round(score)}/${Math.round(maxScore)}</div>
+                    <div class="category-desc">${value}</div>
+                </div>
+            `;
+        });
+        
+        breakdownGrid.innerHTML = html;
+    }
+    
+    function calculateScore(questionId, value) {
+        // Simple scoring logic - can be enhanced based on mode
+        const scores = {
+            // Home mode scores
+            'plastic': { 'No': 25, 'Low': 18, 'Medium': 12, 'High': 6, 'Yes': 6, 'Recycled': 15 },
+            'transport': { 'Walking': 25, 'Bicycle': 25, 'Public transport': 20, 'Car': 8, 'Electric vehicle': 18, 'Hybrid car': 15, 'Gas car': 5 },
+            'food': { 'Vegan': 25, 'Vegetarian': 20, 'Mostly veg': 16, 'Mixed': 12, 'Mostly meat': 8, 'Local produce': 22 },
+            'energy': { 'Very Low': 25, 'Low': 20, 'Medium': 15, 'High': 8, 'Renewable': 22 },
+            'water': { 'Conservative': 20, 'Low': 16, 'Medium': 12, 'High': 8 },
+            'waste': { 'Compost': 20, 'Recycle All': 18, 'Most Recycled': 15, 'Some Recycled': 10, 'Landfill': 5 },
+            
+            // Business mode scores
+            'carbon': { 'Carbon Neutral': 25, 'Offsetting': 20, 'Measuring': 15, 'Planning': 10, 'Basic': 5 }
+        };
+        
+        return scores[questionId]?.[value] || 15;
+    }
+    
+    function updateHabitsGrid(habits) {
+        const habitsGrid = document.getElementById('habitsGrid');
+        const questions = questionSets[selectedMode][selectedType];
+        
+        let html = '';
+        questions.forEach(question => {
+            const value = habits[question.id] || 'Not answered';
+            html += `
+                <div class="habit-item">
+                    <h4>${question.label.replace(/<[^>]*>/g, '').substring(0, 20)}...</h4>
+                    <div class="habit-value">${value}</div>
+                </div>
+            `;
+        });
+        
+        habitsGrid.innerHTML = html;
+    }
+    
+    window.resetModeSelection = function() {
+        // Reset all selections
+        selectedMode = null;
+        selectedType = null;
+        currentQuestionSet = 0;
+        formData = {};
+        
+        // Reset UI
+        document.querySelectorAll('.mode-option').forEach(opt => opt.classList.remove('active'));
+        assessmentTypeSection.style.display = 'none';
+        selectedModeDisplay.style.display = 'none';
+        startAssessmentBtn.style.display = 'none';
+        formContainer.style.display = 'none';
+        resultsContainer.style.display = 'none';
+        modeSelectionContainer.style.display = 'block';
+        
+        // Scroll to top
+        modeSelectionContainer.scrollIntoView({ behavior: 'smooth' });
+    };
+    
+    window.resetForm = function() {
+        // Reset to mode selection
+        resetModeSelection();
+    };
+    
+    window.redirectToProfile = function() {
+        window.location.href = "{{ url_for('profile') }}";
+    };
+});
+</script>
+
+<style>
+/* Mode Selection Styles */
+.mode-selection-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.mode-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(46, 204, 113, 0.1);
+}
+
+.mode-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.mode-header h2 {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.mode-header p {
+    color: #7f8c8d;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.mode-section {
+    margin-bottom: 3rem;
+}
+
+.mode-section h3 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .mode-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.mode-option {
+    background: #f8f9fa;
+    border: 2px solid #e1e1e1;
+    border-radius: 15px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.mode-option:hover {
+    transform: translateY(-5px);
+    border-color: #2ecc71;
+    box-shadow: 0 10px 20px rgba(46, 204, 113, 0.1);
+}
+
+.mode-option.active {
+    border-color: #2ecc71;
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.05), rgba(52, 152, 219, 0.05));
+    box-shadow: 0 10px 20px rgba(46, 204, 113, 0.15);
+}
+
+.mode-icon {
+    font-size: 2.5rem;
+    color: #2ecc71;
+    margin-bottom: 1rem;
+}
+
+.mode-option h4 {
+    font-size: 1.3rem;
+    color: #2c3e50;
+    margin-bottom: 0.8rem;
+}
+
+.mode-option p {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.mode-details {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background: rgba(46, 204, 113, 0.1);
+    color: #27ae60;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.selected-mode-display {
+    margin: 2rem 0;
+}
+
+.selected-mode-card {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.05), rgba(52, 152, 219, 0.05));
+    border-radius: 15px;
+    padding: 1.5rem;
+    border-left: 4px solid #2ecc71;
+}
+
+.selected-mode-card h3 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.selected-mode-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.mode-badge {
+    background: #2ecc71;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.form-mode-info, .results-mode-info {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.mode-indicator {
+    background: rgba(46, 204, 113, 0.1);
+    color: #27ae60;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    gap: 1rem;
+}
+
+.form-actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 150px;
+}
+
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+}
+
+/* Enhanced existing styles */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .mode-card,
+[data-theme="dark"] .selected-mode-card {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .mode-option {
+    background: rgba(46, 204, 113, 0.05);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .mode-option.active {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(52, 152, 219, 0.1));
+}
+
+[data-theme="dark"] .mode-option:hover {
+    border-color: #2ecc71;
+}
+
+[data-theme="dark"] .tag {
+    background: rgba(46, 204, 113, 0.2);
+}
+
+[data-theme="dark"] .mode-indicator {
+    background: rgba(46, 204, 113, 0.2);
+}
+
+/* Animation for mode selection */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mode-section {
+    animation: slideIn 0.5s ease;
+}
+
+.mode-section:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.selected-mode-display {
+    animation: slideIn 0.5s ease;
+}
+</style>
+{% endblock %}

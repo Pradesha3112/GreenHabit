@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Home - GreenHabit{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1>Track Your Eco-Friendly Habits</h1>
+        <p>Calculate your daily environmental impact and get personalized tips to live more sustainably.</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('generate') }}" class="btn btn-primary">
+                <i class="fas fa-calculator"></i> Calculate Your Score
+            </a>
+            <a href="{{ url_for('methodology') }}" class="btn btn-secondary">
+                <i class="fas fa-book"></i> Learn More
+            </a>
+        </div>
+    </div>
+    <div class="hero-image">
+        <i class="fas fa-earth-americas"></i>
+    </div>
+</div>
+
+<div class="features-section">
+    <h2>Why Use GreenHabit?</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Track Progress</h3>
+            <p>Monitor your daily eco-habits and see your environmental impact over time.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <h3>Get Personalized Tips</h3>
+            <p>Receive custom recommendations based on your specific habits and areas for improvement.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h3>Achieve Goals</h3>
+            <p>Set and achieve sustainability goals with our easy-to-use tracking system.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3>Join Community</h3>
+            <p>Be part of a community dedicated to making the planet greener, one habit at a time.</p>
+        </div>
+    </div>
+</div>
+
+<div class="how-it-works">
+    <h2>How It Works</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Log Your Daily Habits</h3>
+            <p>Enter your plastic usage, transportation method, food choices, and energy consumption.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Calculate Your Eco-Score</h3>
+            <p>Get an instant score from 0-100 based on your environmental impact.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Receive Personalized Tips</h3>
+            <p>Get actionable advice to improve your score and reduce your carbon footprint.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <h3>Track Your Progress</h3>
+            <p>See how your habits change over time and celebrate your sustainability journey.</p>
+        </div>
+    </div>
+</div>
+
+<div class="cta-section">
+    <h2>Ready to Start Your Eco Journey?</h2>
+    <p>Join thousands of users who are making a difference every day.</p>
+    <a href="{{ url_for('generate') }}" class="btn btn-primary btn-large">
+        <i class="fas fa-play"></i> Start Calculating Now
+    </a>
+</div>
+{% endblock %}

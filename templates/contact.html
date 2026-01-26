@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - GreenHabit{% endblock %}
+
+{% block content %}
+<div class="contact-container">
+    <div class="contact-header">
+        <h1><i class="fas fa-envelope"></i> Contact Us</h1>
+        <p>We'd love to hear from you! Get in touch with any questions or feedback.</p>
+    </div>
+
+    <div class="contact-content">
+        <!-- Contact Form -->
+        <div class="contact-form-container">
+            <div class="contact-form-card">
+                <h2><i class="fas fa-paper-plane"></i> Send us a Message</h2>
+                <p>Fill out the form below and we'll get back to you as soon as possible.</p>
+                
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label for="name">
+                            <i class="fas fa-user"></i> Full Name
+                        </label>
+                        <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i> Email Address
+                        </label>
+                        <input type="email" id="email" name="email" required placeholder="Enter your email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">
+                            <i class="fas fa-tag"></i> Subject
+                        </label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Select a subject...</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="feedback">Feedback</option>
+                            <option value="technical">Technical Support</option>
+                            <option value="partnership">Partnership Opportunity</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">
+                            <i class="fas fa-comment"></i> Message
+                        </label>
+                        <textarea id="message" name="message" rows="5" required placeholder="Type your message here..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="contact-info-container">
+            <div class="contact-info-card">
+                <h2><i class="fas fa-info-circle"></i> Contact Information</h2>
+                
+                <div class="contact-info-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h4>Our Location</h4>
+                        <p>123 Green Street, Eco City</p>
+                        <p>Earth, 12345</p>
+                    </div>
+                </div>
+
+                <div class="contact-info-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h4>Phone Number</h4>
+                        <p>+1 (123) 456-7890</p>
+                        <p>Mon-Fri, 9am-6pm EST</p>
+                    </div>
+                </div>
+
+                <div class="contact-info-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h4>Email Address</h4>
+                        <p>info@greenhabit.com</p>
+                        <p>support@greenhabit.com</p>
+                    </div>
+                </div>
+
+                <div class="contact-info-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h4>Working Hours</h4>
+                        <p>Monday - Friday: 9:00 - 18:00</p>
+                        <p>Saturday: 10:00 - 16:00</p>
+                        <p>Sunday: Closed</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-card">
+                <h2><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
+                
+                <div class="faq-item">
+                    <h4>Is GreenHabit free to use?</h4>
+                    <p>Yes! GreenHabit is completely free. We believe in making eco-awareness accessible to everyone.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>How often should I calculate my eco score?</h4>
+                    <p>We recommend daily tracking for the most accurate habit analysis, but you can use it as often as you'd like.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Can I save my previous scores?</h4>
+                    <p>Currently, scores are calculated in real-time and not stored. We're working on adding save features in future updates.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>How accurate is the scoring system?</h4>
+                    <p>Our scoring is based on established environmental impact metrics and provides a good estimate of your daily eco-footprint.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage" style="display: none;">
+        <div class="success-card">
+            <i class="fas fa-check-circle"></i>
+            <h3>Message Sent Successfully!</h3>
+            <p>Thank you for contacting us. We'll get back to you within 24 hours.</p>
+            <button class="btn btn-secondary" onclick="hideSuccessMessage()">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
