@@ -7,7 +7,8 @@ from functools import wraps
 import json
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Change this to a random secret key
+app.secret_key = 'greenhabit_2026_secure_key'
+ # Change this to a random secret key
 DATABASE = 'greenhabit.db'
 
 # Database initialization
@@ -805,4 +806,4 @@ if __name__ == '__main__':
     # Migrate if needed
     migrate_database()
     
-    app.run(debug=True)
+    app.run()
