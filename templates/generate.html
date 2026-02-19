@@ -933,6 +933,156 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+
+    /* Add this to your existing styles at the end of the style block */
+
+/* Dark theme text color fixes */
+[data-theme="dark"] .mode-header h2,
+[data-theme="dark"] .mode-section h3,
+[data-theme="dark"] .selected-mode-card h3,
+[data-theme="dark"] .mode-option h4,
+[data-theme="dark"] .mode-badge,
+[data-theme="dark"] .form-header h2,
+[data-theme="dark"] .form-group label,
+[data-theme="dark"] .form-hint,
+[data-theme="dark"] .results-header h2,
+[data-theme="dark"] .results-header p,
+[data-theme="dark"] .score-info h3,
+[data-theme="dark"] .breakdown-section h3,
+[data-theme="dark"] .tip-section h3,
+[data-theme="dark"] .habits-section h3,
+[data-theme="dark"] .breakdown-item h4,
+[data-theme="dark"] .habit-item h4 {
+    color: var(--text-color, #f8f9fa) !important;
+}
+
+/* Paragraph and descriptive text */
+[data-theme="dark"] .mode-header p,
+[data-theme="dark"] .mode-option p,
+[data-theme="dark"] .form-header p,
+[data-theme="dark"] .results-header p,
+[data-theme="dark"] .tip-card p,
+[data-theme="dark"] .breakdown-item .category-desc,
+[data-theme="dark"] .habit-item .habit-value {
+    color: var(--text-muted, #adb5bd) !important;
+}
+
+/* Form elements */
+[data-theme="dark"] select,
+[data-theme="dark"] input,
+[data-theme="dark"] textarea {
+    color: var(--text-color, #f8f9fa);
+    background-color: var(--input-bg, #2d3748);
+    border-color: var(--border-color, #4a5568);
+}
+
+[data-theme="dark"] select option {
+    color: var(--text-color, #f8f9fa);
+    background-color: var(--card-bg, #1a202c);
+}
+
+/* Button text colors */
+[data-theme="dark"] .btn {
+    color: white;
+}
+
+[data-theme="dark"] .btn-secondary {
+    background-color: var(--secondary-bg, #4a5568);
+    border-color: var(--secondary-border, #718096);
+    color: white;
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background-color: var(--secondary-hover, #718096);
+}
+
+/* Score and category text */
+[data-theme="dark"] .score-value,
+[data-theme="dark"] .score-total,
+[data-theme="dark"] .score-category {
+    color: white !important;
+}
+
+/* Breakdown scores */
+[data-theme="dark"] .breakdown-item .score {
+    color: var(--primary-color, #2ecc71);
+}
+
+/* Tag text colors */
+[data-theme="dark"] .tag {
+    color: var(--text-color, #f8f9fa) !important;
+}
+
+/* Mode option active state text */
+[data-theme="dark"] .mode-option.active h4,
+[data-theme="dark"] .mode-option.active p {
+    color: var(--text-color, #f8f9fa) !important;
+}
+
+/* Loading spinner text */
+[data-theme="dark"] .loading-container p {
+    color: var(--text-color, #f8f9fa);
+}
+
+/* Additional container background fixes */
+[data-theme="dark"] .form-card,
+[data-theme="dark"] .results-card {
+    background: var(--card-bg, #1a202c);
+    border-color: var(--border-color, #2d3748);
+}
+
+[data-theme="dark"] .mode-option {
+    background: var(--card-bg, #1a202c);
+    border-color: var(--border-color, #2d3748);
+}
+
+[data-theme="dark"] .mode-option:hover {
+    background: rgba(46, 204, 113, 0.1);
+}
+
+[data-theme="dark"] .selected-mode-card {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(52, 152, 219, 0.1));
+    border-left-color: var(--primary-color, #2ecc71);
+}
+
+/* Ensure form hints are visible */
+[data-theme="dark"] .form-hint {
+    color: var(--text-muted, #a0aec0) !important;
+}
+
+/* Mode indicator text */
+[data-theme="dark"] .mode-indicator {
+    color: var(--text-color, #f8f9fa) !important;
+    background: rgba(46, 204, 113, 0.2);
+}
+
+/* Score circle text fix */
+[data-theme="dark"] .score-circle {
+    color: white;
+}
+
+/* Additional utility classes for text colors */
+[data-theme="dark"] .text-light {
+    color: var(--text-color, #f8f9fa) !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--text-muted, #adb5bd) !important;
+}
+
+/* Fix for placeholder text */
+[data-theme="dark"] ::placeholder {
+    color: var(--text-muted, #a0aec0) !important;
+    opacity: 1;
+}
+
+/* Fix for select dropdown arrow */
+[data-theme="dark"] select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23f8f9fa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+}
 /* Mode Selection Styles */
 .mode-selection-container {
     width: 100%;

@@ -103,67 +103,71 @@
             </div>
 
             <!-- Statistics -->
-            <div class="profile-card">
-                <div class="card-header">
-                    <h3><i class="fas fa-chart-pie"></i> Statistics</h3>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-trophy"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="bestScore">{{ stats['best_score'] or 0 }}</div>
-                            <div class="stat-label">Best Score</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-bolt"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="currentStreak">{{ user['eco_streak'] or 0 }}</div>
-                            <div class="stat-label">Current Streak</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="avgScore">{{ stats['avg_score'] or 0 }}</div>
-                            <div class="stat-label">Average Score</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-leaf"></i>
-                        </div>
-                    <div class="stat-content">
-            <div class="stat-value" id="totalDays">{{ stats['total_days'] or 0 }}</div>  <!-- CHANGED to total_days -->
-            <div class="stat-label">Total Days</div>
-        </div>
-                    </div>
-                </div>
-                
-                <div class="progress-section">
-                    <h4>Monthly Goal Progress</h4>
-                  <div class="progress-bar">
-        <div class="progress-fill" id="monthlyProgress" style="width: {{ (stats['total_days'] or 0) / 30 * 100 }}%"></div>  <!-- CHANGED to total_days -->
+        <div class="profile-card">
+    <div class="card-header">
+        <h3><i class="fas fa-chart-pie"></i> Statistics</h3>
+        <!-- Add Post to Community button -->
+        <a href="{{ url_for('community') }}" class="btn btn-primary btn-small">
+            <i class="fas fa-share-alt"></i> Post to Community
+        </a>
     </div>
-    <span id="progressText">{{ stats['total_days'] or 0 }}/30 days completed</span>  
-</div>
-                
-                <!-- Quick Stats Update -->
-                <div class="refresh-section">
-                    <button class="btn btn-secondary btn-sm" onclick="refreshStats()">
-                        <i class="fas fa-sync-alt"></i> Refresh Stats
-                    </button>
-                </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-trophy"></i>
             </div>
+            <div class="stat-content">
+                <div class="stat-value" id="bestScore">{{ stats['best_score'] or 0 }}</div>
+                <div class="stat-label">Best Score</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="currentStreak">{{ user['eco_streak'] or 0 }}</div>
+                <div class="stat-label">Current Streak</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="avgScore">{{ stats['avg_score'] or 0 }}</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-leaf"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalDays">{{ stats['total_days'] or 0 }}</div>
+                <div class="stat-label">Total Days</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="progress-section">
+        <h4>Monthly Goal Progress</h4>
+        <div class="progress-bar">
+            <div class="progress-fill" id="monthlyProgress" style="width: {{ (stats['total_days'] or 0) / 30 * 100 }}%"></div>
+        </div>
+        <span id="progressText">{{ stats['total_days'] or 0 }}/30 days completed</span>
+    </div>
+    
+    <!-- Quick Stats Update -->
+    <div class="refresh-section">
+        <button class="btn btn-secondary btn-sm" onclick="refreshStats()">
+            <i class="fas fa-sync-alt"></i> Refresh Stats
+        </button>
+    </div>
+</div>
 
             <!-- Account Settings -->
             <div class="profile-card">
@@ -326,6 +330,209 @@
 </div>
 
 <style>
+
+    /* ============ DARK THEME TEXT COLOR FIXES ============ */
+
+/* Profile Header */
+[data-theme="dark"] .profile-info h1,
+[data-theme="dark"] .stat-value,
+[data-theme="dark"] .card-header h3,
+[data-theme="dark"] .modal-header h3 {
+    color: var(--text-color, #f8f9fa) !important;
+}
+
+/* Text paragraphs and labels */
+[data-theme="dark"] .profile-username,
+[data-theme="dark"] .profile-email,
+[data-theme="dark"] .stat-label,
+[data-theme="dark"] .date-display,
+[data-theme="dark"] .activity-date,
+[data-theme="dark"] .progress-section h4,
+[data-theme="dark"] .progress-section span,
+[data-theme="dark"] .empty-state p,
+[data-theme="dark"] .danger-zone small,
+[data-theme="dark"] .checkbox-group label small,
+[data-theme="dark"] .form-group small,
+[data-theme="dark"] .profile-stats .stat-label {
+    color: var(--text-muted, #adb5bd) !important;
+}
+
+/* Activity items text */
+[data-theme="dark"] .activity-item,
+[data-theme="dark"] .settings-item span,
+[data-theme="dark"] .settings-item {
+    color: var(--text-color, #f8f9fa) !important;
+}
+
+[data-theme="dark"] .habit-tag {
+    color: var(--text-color, #f8f9fa) !important;
+    background: rgba(46, 204, 113, 0.2);
+}
+
+/* Modal content text */
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .form-group label,
+[data-theme="dark"] .danger-zone h4,
+[data-theme="dark"] .checkbox-group label {
+    color: var(--text-color, #f8f9fa) !important;
+}
+
+/* Form inputs */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    color: var(--text-color, #f8f9fa) !important;
+    background-color: var(--input-bg, #2d3748) !important;
+    border-color: var(--border-color, #4a5568) !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-muted, #a0aec0) !important;
+}
+
+[data-theme="dark"] select option {
+    color: var(--text-color, #f8f9fa) !important;
+    background-color: var(--card-bg, #1a202c) !important;
+}
+
+/* Buttons */
+[data-theme="dark"] .btn {
+    color: white !important;
+}
+
+[data-theme="dark"] .btn-secondary {
+    background-color: var(--secondary-bg, #4a5568) !important;
+    border-color: var(--border-color, #4a5568) !important;
+    color: var(--text-color, #f8f9fa) !important;
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background-color: var(--secondary-hover, #718096) !important;
+}
+
+[data-theme="dark"] .btn-danger {
+    background-color: #e74c3c !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+    background-color: #c0392b !important;
+}
+
+/* Icons */
+[data-theme="dark"] .profile-avatar i,
+[data-theme="dark"] .stat-icon i,
+[data-theme="dark"] .card-header h3 i,
+[data-theme="dark"] .date-display i,
+[data-theme="dark"] .modal-header h3 i {
+    color: var(--primary-color, #2ecc71) !important;
+}
+
+[data-theme="dark"] .settings-item i:first-child,
+[data-theme="dark"] .settings-item i:last-child {
+    color: var(--text-muted, #adb5bd) !important;
+}
+
+/* Background colors */
+[data-theme="dark"] .profile-header,
+[data-theme="dark"] .profile-card,
+[data-theme="dark"] .modal-content {
+    background: var(--card-bg, #1a202c) !important;
+    border-color: var(--border-color, #4a5568) !important;
+}
+
+[data-theme="dark"] .activity-item,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .settings-item:hover {
+    background: var(--secondary-bg, #2d3748) !important;
+}
+
+[data-theme="dark"] .progress-bar {
+    background: var(--secondary-bg, #4a5568) !important;
+}
+
+[data-theme="dark"] .danger-zone {
+    background: rgba(231, 76, 60, 0.15) !important;
+    border-color: rgba(231, 76, 60, 0.3) !important;
+}
+
+[data-theme="dark"] .modal {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Empty state */
+[data-theme="dark"] .empty-state {
+    color: var(--text-muted, #adb5bd) !important;
+}
+
+[data-theme="dark"] .empty-state i {
+    color: var(--text-muted, #adb5bd) !important;
+}
+
+/* Activity score badges */
+[data-theme="dark"] .score-badge {
+    color: white !important;
+    font-weight: 600;
+}
+
+/* Modal close button */
+[data-theme="dark"] .modal-close {
+    color: var(--text-muted, #adb5bd) !important;
+}
+
+[data-theme="dark"] .modal-close:hover {
+    color: #e74c3c !important;
+}
+
+/* Checkbox text */
+[data-theme="dark"] .checkbox-group label {
+    color: var(--text-color, #f8f9fa) !important;
+}
+
+/* Form hints and descriptions */
+[data-theme="dark"] .form-group small {
+    color: var(--text-muted, #a0aec0) !important;
+}
+
+/* Radio buttons and checkboxes */
+[data-theme="dark"] input[type="checkbox"],
+[data-theme="dark"] input[type="radio"] {
+    accent-color: var(--primary-color, #2ecc71);
+}
+
+/* Scrollbar for dark theme */
+[data-theme="dark"] ::-webkit-scrollbar {
+    width: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--card-bg, #1a202c);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--secondary-bg, #4a5568);
+    border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color, #2ecc71);
+}
+
+/* Links in dark mode */
+[data-theme="dark"] a {
+    color: var(--primary-color, #2ecc71) !important;
+}
+
+[data-theme="dark"] a:hover {
+    color: #27ae60 !important;
+}
+
+/* Selection color */
+[data-theme="dark"] ::selection {
+    background: var(--primary-color, #2ecc71);
+    color: white;
+}
 /* Profile Page Styles */
 .profile-container {
     padding: 2rem 0;

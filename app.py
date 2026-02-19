@@ -5,15 +5,15 @@ import hashlib
 import os
 from functools import wraps
 import json
+import time
 
 app = Flask(__name__)
 app.secret_key = 'greenhabit_2026_secure_key'
- # Change this to a random secret key
 DATABASE = 'greenhabit.db'
 
-# Database initialization
+# Database initialization with DROP and RECREATE for testing
 def init_db():
-    """Initialize database with tables"""
+    """Initialize database with tables - DROPS and RECREATES for testing"""
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     
@@ -33,15 +33,39 @@ def init_db():
         )
     ''')
     
-    # User habits table - UPDATED SCHEMA
+    # DROP and RECREATE community_posts table to ensure correct schema
+    c.execute('DROP TABLE IF EXISTS community_posts')
+    
+    # Create community_posts table with ALL required columns
+    c.execute('''
+        CREATE TABLE community_posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            username TEXT NOT NULL,
+            message TEXT NOT NULL,
+            privacy TEXT NOT NULL DEFAULT 'public',
+            best_score INTEGER DEFAULT 0,
+            current_streak INTEGER DEFAULT 0,
+            avg_score INTEGER DEFAULT 0,
+            total_days INTEGER DEFAULT 0,
+            likes INTEGER DEFAULT 0,
+            liked_by TEXT DEFAULT '[]',
+            comments TEXT DEFAULT '[]',
+            reports INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # User habits table
     c.execute('''
         CREATE TABLE IF NOT EXISTS user_habits (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             date TEXT NOT NULL,
-            mode TEXT DEFAULT 'home',  -- 'home' or 'business'
-            assessment_type TEXT DEFAULT 'quick',  -- 'quick' or 'detailed'
-            habits_json TEXT NOT NULL,  -- Store all habits as JSON
+            mode TEXT DEFAULT 'home',
+            assessment_type TEXT DEFAULT 'quick',
+            habits_json TEXT NOT NULL,
             eco_score INTEGER NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users (id),
             UNIQUE(user_id, date, mode, assessment_type)
@@ -53,6 +77,7 @@ def init_db():
     
     conn.commit()
     conn.close()
+    print("Database initialized with correct schema")
 
 # Database helper functions
 def get_db():
@@ -74,7 +99,93 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Calculate eco score functions for different modes
+# Calculate user statistics
+def calculate_user_stats(user_id):
+    """Calculate user statistics"""
+    db = get_db()
+    
+    # Calculate stats from user_habits
+    result = db.execute('''
+        SELECT 
+            COUNT(DISTINCT date) as total_days,
+            MAX(eco_score) as best_score,
+            AVG(eco_score) as avg_score
+        FROM user_habits 
+        WHERE user_id = ?
+    ''', (user_id,)).fetchone()
+    
+    # Get current streak from users table
+    streak_result = db.execute(
+        'SELECT eco_streak FROM users WHERE id = ?',
+        (user_id,)
+    ).fetchone()
+    
+    return {
+        'total_days': result['total_days'] if result['total_days'] else 0,
+        'best_score': int(result['best_score']) if result['best_score'] else 0,
+        'avg_score': int(result['avg_score']) if result['avg_score'] else 0,
+        'current_streak': streak_result['eco_streak'] if streak_result else 0
+    }
+
+# Calculate streak function
+def calculate_streak(user_id):
+    """Calculate current streak for a user"""
+    conn = get_db()
+    
+    # Get DISTINCT dates when user logged scores
+    dates = conn.execute(
+        '''SELECT DISTINCT date FROM user_habits 
+           WHERE user_id = ? 
+           ORDER BY date DESC''',
+        (user_id,)
+    ).fetchall()
+    
+    conn.close()
+    
+    if not dates:
+        return 0
+    
+    today = datetime.now().date()
+    streak = 0
+    
+    # Convert database dates to datetime objects
+    date_list = []
+    for record in dates:
+        try:
+            date_obj = datetime.strptime(record['date'], '%Y-%m-%d').date()
+            date_list.append(date_obj)
+        except:
+            continue
+    
+    if not date_list:
+        return 0
+    
+    # Check if latest entry is today
+    if date_list[0] == today:
+        streak = 1
+        # Check previous consecutive days
+        for i in range(1, len(date_list)):
+            expected_date = today - timedelta(days=i)
+            if expected_date in date_list:
+                streak += 1
+            else:
+                break
+    else:
+        # Check if yesterday was logged
+        yesterday = today - timedelta(days=1)
+        if date_list[0] == yesterday:
+            streak = 1
+            # Check previous consecutive days
+            for i in range(2, len(date_list) + 1):
+                expected_date = yesterday - timedelta(days=i-1)
+                if expected_date in date_list:
+                    streak += 1
+                else:
+                    break
+    
+    return streak
+
+# ====== ECO SCORE CALCULATION FUNCTIONS ======
 def calculate_home_score(data, assessment_type='quick'):
     """Calculate eco-score for home/personal mode"""
     score = 0
@@ -231,7 +342,6 @@ def get_home_tip(score, data):
     elif score >= 60:
         return "Good job! You're making conscious choices. Try to reduce plastic usage even further."
     else:
-        # Find areas for improvement
         suggestions = []
         
         plastic = data.get('plastic', '')
@@ -262,7 +372,6 @@ def get_business_tip(score, data):
     elif score >= 60:
         return "Solid sustainability practices! Look into energy audits and carbon offset programs."
     else:
-        # Find areas for improvement
         suggestions = []
         
         energy = data.get('energy', '')
@@ -302,65 +411,368 @@ def get_score_label(score):
     else:
         return 'Needs Improvement'
 
-# Calculate streak function
-def calculate_streak(user_id):
-    """Calculate current streak for a user"""
-    conn = get_db()
-    
-    # Get DISTINCT dates when user logged scores
-    dates = conn.execute(
-        '''SELECT DISTINCT date FROM user_habits 
-           WHERE user_id = ? 
-           ORDER BY date DESC''',
-        (user_id,)
-    ).fetchall()
-    
-    conn.close()
-    
-    if not dates:
-        return 0
-    
-    today = datetime.now().date()
-    streak = 0
-    
-    # Convert database dates to datetime objects
-    date_list = []
-    for record in dates:
-        try:
-            date_obj = datetime.strptime(record['date'], '%Y-%m-%d').date()
-            date_list.append(date_obj)
-        except:
-            continue
-    
-    if not date_list:
-        return 0
-    
-    # Check if latest entry is today
-    if date_list[0] == today:
-        streak = 1
-        # Check previous consecutive days
-        for i in range(1, len(date_list)):
-            expected_date = today - timedelta(days=i)
-            if expected_date in date_list:
-                streak += 1
-            else:
-                break
-    else:
-        # Check if yesterday was logged
-        yesterday = today - timedelta(days=1)
-        if date_list[0] == yesterday:
-            streak = 1
-            # Check previous consecutive days
-            for i in range(2, len(date_list) + 1):
-                expected_date = yesterday - timedelta(days=i-1)
-                if expected_date in date_list:
-                    streak += 1
-                else:
-                    break
-    
-    return streak
+# ====== COMMUNITY API ROUTES ======
 
-# Routes
+@app.route('/api/community/posts', methods=['GET'])
+@login_required
+def get_community_posts():
+    """Get community posts with filters"""
+    user_id = session['user_id']
+    filter_type = request.args.get('filter', 'all')
+    
+    db = get_db()
+    
+    # Base query - handle missing columns gracefully
+    try:
+        query = '''
+            SELECT cp.*, 
+                   CASE WHEN cp.liked_by LIKE ? THEN 1 ELSE 0 END as user_liked
+            FROM community_posts cp
+            WHERE 1=1
+        '''
+        params = [f'%"{user_id}"%']
+        
+        # Apply privacy filters
+        if filter_type == 'public':
+            query += " AND cp.privacy = 'public'"
+        elif filter_type == 'my-posts':
+            query += " AND cp.user_id = ?"
+            params.append(user_id)
+        elif filter_type == 'community':
+            query += " AND cp.privacy IN ('public', 'community')"
+        else:  # all
+            query += " AND (cp.privacy IN ('public', 'community') OR cp.user_id = ?)"
+            params.append(user_id)
+        
+        query += " ORDER BY cp.created_at DESC"
+        
+        posts = db.execute(query, params).fetchall()
+        
+        # Convert to dict and parse JSON fields
+        posts_data = []
+        for post in posts:
+            post_dict = dict(post)
+            # Parse JSON fields
+            try:
+                post_dict['liked_by'] = json.loads(post_dict['liked_by']) if post_dict['liked_by'] else []
+            except:
+                post_dict['liked_by'] = []
+            
+            try:
+                post_dict['comments'] = json.loads(post_dict['comments']) if post_dict['comments'] else []
+            except:
+                post_dict['comments'] = []
+            posts_data.append(post_dict)
+        
+        return jsonify({'success': True, 'posts': posts_data})
+    
+    except sqlite3.OperationalError as e:
+        print(f"Database error: {e}")
+        # Return empty posts if table has issues
+        return jsonify({'success': True, 'posts': []})
+
+@app.route('/api/community/posts', methods=['POST'])
+@login_required
+def create_community_post():
+    """Create a new community post"""
+    user_id = session['user_id']
+    data = request.get_json()
+    
+    # Validate required fields
+    if not data.get('message'):
+        return jsonify({'success': False, 'error': 'Message is required'}), 400
+    
+    # Get user info
+    db = get_db()
+    user = db.execute(
+        'SELECT username, eco_streak FROM users WHERE id = ?', 
+        (user_id,)
+    ).fetchone()
+    
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    # Get user stats for the post
+    stats = calculate_user_stats(user_id)
+    
+    try:
+        # Insert post
+        db.execute('''
+            INSERT INTO community_posts 
+            (user_id, username, message, privacy, best_score, current_streak, avg_score, total_days)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            user_id,
+            user['username'],
+            data['message'],
+            data.get('privacy', 'public'),
+            stats['best_score'],
+            user['eco_streak'] or 0,
+            stats['avg_score'],
+            stats['total_days']
+        ))
+        db.commit()
+        
+        return jsonify({'success': True, 'message': 'Post created successfully'})
+    
+    except sqlite3.OperationalError as e:
+        print(f"Database error creating post: {e}")
+        # Try with minimal required fields
+        try:
+            db.execute('''
+                INSERT INTO community_posts 
+                (user_id, username, message, privacy)
+                VALUES (?, ?, ?, ?)
+            ''', (
+                user_id,
+                user['username'],
+                data['message'],
+                data.get('privacy', 'public')
+            ))
+            db.commit()
+            return jsonify({'success': True, 'message': 'Post created successfully'})
+        except Exception as e2:
+            return jsonify({'success': False, 'error': f'Database error: {str(e2)}'}), 500
+
+@app.route('/api/community/posts/<int:post_id>/like', methods=['POST'])
+@login_required
+def toggle_like_post(post_id):
+    """Like or unlike a post"""
+    user_id = session['user_id']
+    
+    db = get_db()
+    
+    try:
+        # Get the post
+        post = db.execute(
+            'SELECT liked_by FROM community_posts WHERE id = ?',
+            (post_id,)
+        ).fetchone()
+        
+        if not post:
+            return jsonify({'success': False, 'error': 'Post not found'}), 404
+        
+        # Parse liked_by array
+        liked_by = json.loads(post['liked_by']) if post['liked_by'] else []
+        
+        # Check if user already liked
+        user_str_id = str(user_id)
+        if user_str_id in liked_by:
+            # Unlike
+            liked_by.remove(user_str_id)
+            new_likes = len(liked_by)
+        else:
+            # Like
+            liked_by.append(user_str_id)
+            new_likes = len(liked_by)
+        
+        # Update post
+        db.execute('''
+            UPDATE community_posts 
+            SET likes = ?, liked_by = ?
+            WHERE id = ?
+        ''', (new_likes, json.dumps(liked_by), post_id))
+        db.commit()
+        
+        return jsonify({
+            'success': True, 
+            'liked': user_str_id in liked_by,
+            'likes': new_likes
+        })
+    
+    except sqlite3.OperationalError as e:
+        print(f"Database error liking post: {e}")
+        return jsonify({'success': False, 'error': 'Database error'}), 500
+
+@app.route('/api/community/posts/<int:post_id>/comment', methods=['POST'])
+@login_required
+def add_comment_to_post(post_id):
+    """Add a comment to a post"""
+    user_id = session['user_id']
+    data = request.get_json()
+    
+    if not data.get('text'):
+        return jsonify({'success': False, 'error': 'Comment text is required'}), 400
+    
+    db = get_db()
+    
+    try:
+        # Get user info
+        user = db.execute(
+            'SELECT username FROM users WHERE id = ?',
+            (user_id,)
+        ).fetchone()
+        
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+        
+        # Get current comments
+        post = db.execute(
+            'SELECT comments FROM community_posts WHERE id = ?',
+            (post_id,)
+        ).fetchone()
+        
+        if not post:
+            return jsonify({'success': False, 'error': 'Post not found'}), 404
+        
+        # Parse existing comments
+        comments = json.loads(post['comments']) if post['comments'] else []
+        
+        # Add new comment
+        new_comment = {
+            'id': int(time.time() * 1000),
+            'user_id': user_id,
+            'username': user['username'],
+            'text': data['text'],
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        comments.append(new_comment)
+        
+        # Update post
+        db.execute('''
+            UPDATE community_posts 
+            SET comments = ?
+            WHERE id = ?
+        ''', (json.dumps(comments), post_id))
+        db.commit()
+        
+        return jsonify({'success': True, 'comment': new_comment})
+    
+    except sqlite3.OperationalError as e:
+        print(f"Database error adding comment: {e}")
+        return jsonify({'success': False, 'error': 'Database error'}), 500
+
+@app.route('/api/community/posts/<int:post_id>', methods=['DELETE'])
+@login_required
+def delete_community_post(post_id):
+    """Delete a community post"""
+    user_id = session['user_id']
+    
+    db = get_db()
+    
+    try:
+        # Check if post exists and user is the author
+        post = db.execute(
+            'SELECT user_id FROM community_posts WHERE id = ?',
+            (post_id,)
+        ).fetchone()
+        
+        if not post:
+            return jsonify({'success': False, 'error': 'Post not found'}), 404
+        
+        if post['user_id'] != user_id:
+            return jsonify({'success': False, 'error': 'Not authorized to delete this post'}), 403
+        
+        # Delete the post
+        db.execute('DELETE FROM community_posts WHERE id = ?', (post_id,))
+        db.commit()
+        
+        return jsonify({'success': True, 'message': 'Post deleted successfully'})
+    
+    except Exception as e:
+        print(f"Error deleting post: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/community/posts/<int:post_id>/report', methods=['POST'])
+@login_required
+def report_community_post(post_id):
+    """Report a community post"""
+    user_id = session['user_id']
+    
+    db = get_db()
+    
+    try:
+        # Check if post exists
+        post = db.execute(
+            'SELECT user_id, reports FROM community_posts WHERE id = ?',
+            (post_id,)
+        ).fetchone()
+        
+        if not post:
+            return jsonify({'success': False, 'error': 'Post not found'}), 404
+        
+        # Check if user is reporting their own post
+        if post['user_id'] == user_id:
+            return jsonify({'success': False, 'error': 'Cannot report your own post'}), 400
+        
+        # Increment report count
+        new_reports = (post['reports'] or 0) + 1
+        db.execute('''
+            UPDATE community_posts 
+            SET reports = ?
+            WHERE id = ?
+        ''', (new_reports, post_id))
+        db.commit()
+        
+        return jsonify({'success': True, 'message': 'Post reported successfully'})
+    
+    except Exception as e:
+        print(f"Error reporting post: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/community/stats', methods=['GET'])
+def get_community_stats():
+    """Get community statistics"""
+    db = get_db()
+    
+    try:
+        # Total members (users who have posted)
+        total_members = db.execute('''
+            SELECT COUNT(DISTINCT user_id) as count 
+            FROM community_posts
+        ''').fetchone()
+        total_members = total_members['count'] if total_members else 0
+        
+        # Total posts
+        total_posts = db.execute('SELECT COUNT(*) as count FROM community_posts').fetchone()
+        total_posts = total_posts['count'] if total_posts else 0
+        
+        # Average community score
+        try:
+            avg_score_result = db.execute('''
+                SELECT AVG(avg_score) as avg 
+                FROM community_posts 
+                WHERE avg_score > 0
+            ''').fetchone()
+            avg_community_score = int(avg_score_result['avg'] or 0)
+        except:
+            avg_community_score = 0
+        
+        # Top streak
+        try:
+            top_streak_result = db.execute('''
+                SELECT MAX(current_streak) as max 
+                FROM community_posts
+            ''').fetchone()
+            top_streak = top_streak_result['max'] or 0
+        except:
+            top_streak = 0
+        
+        return jsonify({
+            'success': True,
+            'stats': {
+                'total_members': total_members,
+                'total_posts': total_posts,
+                'avg_community_score': avg_community_score,
+                'top_streak': top_streak
+            }
+        })
+    
+    except Exception as e:
+        print(f"Error getting community stats: {e}")
+        return jsonify({
+            'success': True,
+            'stats': {
+                'total_members': 0,
+                'total_posts': 0,
+                'avg_community_score': 0,
+                'top_streak': 0
+            }
+        })
+
+# ====== PAGE ROUTES ======
+
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -378,7 +790,27 @@ def generate():
 def methodology():
     return render_template('methodology.html')
 
-# Authentication Routes
+@app.route('/community')
+@login_required
+def community():
+    user_id = session['user_id']
+    
+    # Get user info
+    db = get_db()
+    user = db.execute(
+        'SELECT * FROM users WHERE id = ?', (user_id,)
+    ).fetchone()
+    
+    # Get user stats
+    stats = calculate_user_stats(user_id)
+    
+    return render_template(
+        'community.html',
+        user=dict(user) if user else {},
+        stats=stats,
+        current_datetime=datetime.now().strftime("%B %d, %Y, %I:%M %p")
+    )
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -464,7 +896,6 @@ def logout():
     flash('You have been logged out', 'info')
     return redirect(url_for('home'))
 
-# Profile Route - FIXED
 @app.route('/profile')
 @login_required
 def profile():
@@ -496,7 +927,7 @@ def profile():
             parsed['habits'] = {}
         parsed_habits.append(parsed)
     
-    # Get user statistics - FIXED QUERY
+    # Get user statistics
     stats = conn.execute(
         '''SELECT 
                COUNT(DISTINCT date) as total_days,
@@ -515,11 +946,9 @@ def profile():
     # Handle None values in stats
     if stats:
         stats = dict(stats)
-        # Convert None values to 0 for template rendering
         for key in stats:
             if stats[key] is None:
                 stats[key] = 0
-        # Round avg_score for display
         if stats['avg_score']:
             stats['avg_score'] = round(stats['avg_score'], 1)
     else:
@@ -544,7 +973,6 @@ def profile():
                          stats=stats,
                          current_datetime=current_datetime)
 
-# API Routes
 @app.route('/api/calculate', methods=['POST'])
 @login_required
 def calculate():
@@ -559,11 +987,11 @@ def calculate():
         if mode == 'home':
             eco_score = calculate_home_score(data, assessment_type)
             tip = get_home_tip(eco_score, data)
-        else:  # business mode
+        else:
             eco_score = calculate_business_score(data, assessment_type)
             tip = get_business_tip(eco_score, data)
         
-        # Prepare habits data (remove mode/type from habits)
+        # Prepare habits data
         habits_data = {k: v for k, v in data.items() if k not in ['mode', 'type']}
         
         # Save to database
@@ -580,14 +1008,20 @@ def calculate():
             (session['user_id'], today, mode, assessment_type, habits_json, eco_score)
         )
         
-        # Update user stats - Only update total_days if it's a new unique day
-        # First check if user already has an entry for today
+        # Update user streak
+        current_streak = calculate_streak(session['user_id'])
+        conn.execute(
+            'UPDATE users SET eco_streak = ? WHERE id = ?',
+            (current_streak, session['user_id'])
+        )
+        
+        # Update total score and days
         existing_today = conn.execute(
             'SELECT COUNT(*) as count FROM user_habits WHERE user_id = ? AND date = ?',
             (session['user_id'], today)
         ).fetchone()
         
-        if existing_today['count'] == 1:  # This is the first entry today
+        if existing_today['count'] == 1:
             conn.execute(
                 '''UPDATE users 
                    SET total_score = total_score + ?,
@@ -596,7 +1030,6 @@ def calculate():
                 (eco_score, session['user_id'])
             )
         else:
-            # Just update the score
             conn.execute(
                 '''UPDATE users 
                    SET total_score = total_score + ?
@@ -654,7 +1087,7 @@ def user_stats():
     conn.close()
     
     return jsonify({
-        'total_days': stats['total_days'] or 0,  # Changed from total_entries
+        'total_days': stats['total_days'] or 0,
         'total_entries': stats['total_entries'] or 0,
         'avg_score': round(stats['avg_score'] or 0, 1),
         'best_score': stats['best_score'] or 0,
@@ -720,7 +1153,8 @@ def delete_account():
         
         # Delete user habits
         conn.execute('DELETE FROM user_habits WHERE user_id = ?', (session['user_id'],))
-        
+        # Delete user community posts
+        conn.execute('DELETE FROM community_posts WHERE user_id = ?', (session['user_id'],))
         # Delete user
         conn.execute('DELETE FROM users WHERE id = ?', (session['user_id'],))
         
@@ -735,75 +1169,66 @@ def delete_account():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-# Database migration function
-def migrate_database():
-    """Migrate from old schema to new schema"""
+def check_and_fix_database():
+    """Check database schema and fix if needed"""
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     
     try:
-        # Check if old columns exist
-        c.execute("PRAGMA table_info(user_habits)")
-        columns = [col[1] for col in c.fetchall()]
-        
-        if 'plastic' in columns and 'habits_json' not in columns:
-            # Migrate old data
-            print("Migrating database...")
-            
-            # Create new table
+        # Check if community_posts table exists
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='community_posts'")
+        if not c.fetchone():
+            print("Creating community_posts table...")
             c.execute('''
-                CREATE TABLE user_habits_new (
+                CREATE TABLE community_posts (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
-                    date TEXT NOT NULL,
-                    mode TEXT DEFAULT 'home',
-                    assessment_type TEXT DEFAULT 'quick',
-                    habits_json TEXT NOT NULL,
-                    eco_score INTEGER NOT NULL,
-                    FOREIGN KEY (user_id) REFERENCES users (id),
-                    UNIQUE(user_id, date, mode, assessment_type)
+                    username TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    privacy TEXT NOT NULL DEFAULT 'public',
+                    best_score INTEGER DEFAULT 0,
+                    current_streak INTEGER DEFAULT 0,
+                    avg_score INTEGER DEFAULT 0,
+                    total_days INTEGER DEFAULT 0,
+                    likes INTEGER DEFAULT 0,
+                    liked_by TEXT DEFAULT '[]',
+                    comments TEXT DEFAULT '[]',
+                    reports INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users (id)
                 )
             ''')
+            print("✓ Created community_posts table")
+        else:
+            # Check for missing columns
+            c.execute("PRAGMA table_info(community_posts)")
+            columns = {col[1] for col in c.fetchall()}
+            required_columns = {
+                'username', 'best_score', 'current_streak', 'avg_score', 
+                'total_days', 'likes', 'liked_by', 'comments', 'reports'
+            }
             
-            # Migrate existing data
-            c.execute('SELECT * FROM user_habits')
-            old_records = c.fetchall()
-            
-            for record in old_records:
-                id, user_id, date, plastic, transport, food, energy, eco_score = record
-                habits_data = {
-                    'plastic': plastic,
-                    'transport': transport,
-                    'food': food,
-                    'energy': energy
-                }
-                habits_json = json.dumps(habits_data)
-                
-                c.execute(
-                    '''INSERT INTO user_habits_new 
-                       (user_id, date, mode, assessment_type, habits_json, eco_score)
-                       VALUES (?, ?, ?, ?, ?, ?)''',
-                    (user_id, date, 'home', 'quick', habits_json, eco_score)
-                )
-            
-            # Drop old table and rename new one
-            c.execute('DROP TABLE user_habits')
-            c.execute('ALTER TABLE user_habits_new RENAME TO user_habits')
-            
-            print("Migration completed successfully!")
-            
+            for column in required_columns:
+                if column not in columns:
+                    print(f"Adding missing column: {column}")
+                    if column == 'liked_by' or column == 'comments':
+                        c.execute(f'ALTER TABLE community_posts ADD COLUMN {column} TEXT DEFAULT "[]"')
+                    else:
+                        c.execute(f'ALTER TABLE community_posts ADD COLUMN {column} INTEGER DEFAULT 0')
+                    print(f"✓ Added column: {column}")
+    
     except Exception as e:
-        print(f"Migration error: {e}")
+        print(f"Database check error: {e}")
         conn.rollback()
     finally:
         conn.commit()
         conn.close()
 
 if __name__ == '__main__':
+    # Check and fix database
+    check_and_fix_database()
+    
     # Initialize database
     init_db()
     
-    # Migrate if needed
-    migrate_database()
-    
-    app.run()
+    app.run(debug=True, port=5000)

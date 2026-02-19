@@ -1,0 +1,2008 @@
+{% extends "base.html" %}
+
+{% block title %}Community - GreenHabit{% endblock %}
+
+{% block content %}
+<div class="community-container" 
+     {% if user %}
+     data-user-id="{{ user.id }}" 
+     data-username="{{ user.username }}"
+     data-user-email="{{ user.email }}"
+     {% endif %}>
+    <div class="community-header">
+        <h1><i class="fas fa-users"></i> GreenHabit Community</h1>
+        <p class="community-subtitle">Share your eco-progress and inspire others!</p>
+    </div>
+
+    <div class="community-grid">
+        <!-- Left Column: Create Post & Statistics -->
+        <div class="community-sidebar">
+            <!-- Create Post Card -->
+            <div class="create-post-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-edit"></i> Share Your Progress</h3>
+                </div>
+                <div class="create-post-form">
+                    {% if user %}
+                    <div class="form-group">
+                        <label for="postMessage"><i class="fas fa-comment"></i> What's on your eco-mind?</label>
+                        <textarea 
+                            id="postMessage" 
+                            placeholder="Share your eco-achievements, tips, or goals..." 
+                            rows="4"
+                            maxlength="500"
+                        ></textarea>
+                        <div class="char-counter">
+                            <span id="charCount">0</span>/500 characters
+                        </div>
+                    </div>
+                    
+                    <!-- Auto-filled Statistics -->
+                    <div class="post-stats-preview">
+                        <h4><i class="fas fa-chart-bar"></i> Your Current Stats:</h4>
+                        <div class="stats-preview-grid">
+                            <div class="stat-preview">
+                                <span class="stat-label">Best Score</span>
+                                <span class="stat-value" id="previewBestScore">{{ stats.get('best_score', 0) if stats else 0 }}</span>
+                            </div>
+                            <div class="stat-preview">
+                                <span class="stat-label">Current Streak</span>
+                                <span class="stat-value" id="previewCurrentStreak">{{ user.eco_streak or 0 }}</span>
+                            </div>
+                            <div class="stat-preview">
+                                <span class="stat-label">Avg Score</span>
+                                <span class="stat-value" id="previewAvgScore">{{ stats.avg_score or 0 }}</span>
+                            </div>
+                            <div class="stat-preview">
+                                <span class="stat-label">Total Days</span>
+                                <span class="stat-value" id="previewTotalDays">{{ stats.total_days or 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Privacy Settings -->
+                    <div class="privacy-settings">
+                        <h4><i class="fas fa-globe"></i> Post Privacy</h4>
+                        <div class="privacy-options">
+                            <label class="privacy-option">
+                                <input type="radio" name="privacy" value="public" checked>
+                                <i class="fas fa-globe-americas"></i>
+                                <span>Public</span>
+                                <small>Visible to everyone</small>
+                            </label>
+                            <label class="privacy-option">
+                                <input type="radio" name="privacy" value="community">
+                                <i class="fas fa-users"></i>
+                                <span>Community Only</span>
+                                <small>Visible to GreenHabit users</small>
+                            </label>
+                            <label class="privacy-option">
+                                <input type="radio" name="privacy" value="private">
+                                <i class="fas fa-lock"></i>
+                                <span>Private</span>
+                                <small>Only visible to you</small>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Post Actions -->
+                    <div class="post-actions">
+                        <button class="btn btn-secondary" id="draftBtn">
+                            <i class="fas fa-save"></i> Save Draft
+                        </button>
+                        <button class="btn btn-primary" id="sharePostBtn">
+                            <i class="fas fa-share-alt"></i> Share with Community
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="login-prompt">
+                        <div class="empty-state">
+                            <i class="fas fa-user-lock"></i>
+                            <h3>Login Required</h3>
+                            <p>Please login to share posts with the community!</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Community Stats -->
+            <div class="community-stats-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-line"></i> Community Stats</h3>
+                </div>
+                <div class="community-stats">
+                    <div class="community-stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalMembers">0</div>
+                            <div class="stat-label">Total Members</div>
+                        </div>
+                    </div>
+                    <div class="community-stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalPosts">0</div>
+                            <div class="stat-label">Total Posts</div>
+                        </div>
+                    </div>
+                    <div class="community-stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="avgCommunityScore">0</div>
+                            <div class="stat-label">Avg Community Score</div>
+                        </div>
+                    </div>
+                    <div class="community-stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="topStreak">0</div>
+                            <div class="stat-label">Top Streak</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Posts Feed -->
+        <div class="community-feed">
+            <div class="feed-header">
+                <h2><i class="fas fa-newspaper"></i> Community Feed</h2>
+                <div class="feed-filters">
+                    <select id="feedFilter">
+                        <option value="all">All Posts</option>
+                        <option value="public">Public Posts</option>
+                        <option value="community">Community Posts</option>
+                        <option value="popular">Most Popular</option>
+                        <option value="recent">Most Recent</option>
+                        <option value="my-posts">My Posts</option>
+                    </select>
+                    <button class="btn btn-secondary btn-sm" id="refreshFeed">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Posts Container -->
+            <div class="posts-container" id="postsContainer">
+                <div class="empty-feed" id="emptyFeed">
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>No Posts Yet</h3>
+                        <p>Be the first to share your eco-journey with the community!</p>
+                        <p>Write a post above and click "Share with Community" to get started.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading posts...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Post Template (Hidden) -->
+<template id="postTemplate">
+    <div class="post-card">
+        <div class="post-header">
+            <div class="post-author">
+                <div class="author-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="author-info">
+                    <div class="author-name">User Name</div>
+                    <div class="post-time">Just now</div>
+                </div>
+            </div>
+            <div class="post-actions-header">
+                <div class="post-privacy">
+                    <span class="privacy-badge public">
+                        <i class="fas fa-globe-americas"></i> Public
+                    </span>
+                </div>
+                <div class="post-options">
+                    <button class="post-option-btn more-options-btn">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                    <div class="post-options-menu">
+                        <button class="post-option delete-post-btn">
+                            <i class="fas fa-trash"></i> Delete Post
+                        </button>
+                        <button class="post-option edit-post-btn">
+                            <i class="fas fa-edit"></i> Edit Post
+                        </button>
+                        <button class="post-option report-post-btn">
+                            <i class="fas fa-flag"></i> Report Post
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="post-content">
+            <p class="post-message">Post message will appear here...</p>
+            
+            <div class="post-stats">
+                <div class="post-stat">
+                    <i class="fas fa-trophy"></i>
+                    <span>Best Score: <strong>0</strong></span>
+                </div>
+                <div class="post-stat">
+                    <i class="fas fa-bolt"></i>
+                    <span>Streak: <strong>0</strong> days</span>
+                </div>
+                <div class="post-stat">
+                    <i class="fas fa-leaf"></i>
+                    <span>Avg Score: <strong>0</strong></span>
+                </div>
+                <div class="post-stat">
+                    <i class="fas fa-calendar"></i>
+                    <span>Tracked: <strong>0</strong> days</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="post-footer">
+            <div class="post-actions">
+                <button class="post-action like-btn">
+                    <i class="far fa-heart"></i>
+                    <span class="like-count">0</span>
+                </button>
+                <button class="post-action comment-btn">
+                    <i class="far fa-comment"></i>
+                    <span class="comment-count">0</span>
+                </button>
+                <button class="post-action share-btn">
+                    <i class="fas fa-share"></i>
+                </button>
+            </div>
+            <div class="post-timestamp">
+                <i class="far fa-clock"></i>
+                <span>Posted just now</span>
+            </div>
+        </div>
+        
+        <!-- Comments Section -->
+        <div class="comments-section" style="display: none;">
+            <div class="comment-form">
+                <input type="text" placeholder="Write a comment..." class="comment-input">
+                <button class="btn btn-primary btn-sm comment-submit">Post</button>
+            </div>
+            <div class="comments-list"></div>
+        </div>
+    </div>
+</template>
+
+<!-- Delete Confirmation Modal -->
+<div class="delete-modal" id="deleteModal">
+    <div class="delete-modal-content">
+        <div class="delete-modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Delete Post</h3>
+            <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+        </div>
+        <div class="delete-modal-actions">
+            <button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Delete Post</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Community Page Styles */
+.community-container {
+    padding: 2rem 0;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.community-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 0 1rem;
+}
+
+.community-header h1 {
+    font-size: 2.8rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.community-header h1 i {
+    color: #2ecc71;
+}
+
+.community-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Login Prompt */
+.login-prompt {
+    padding: 2rem 0;
+}
+
+.login-prompt .empty-state {
+    padding: 2rem;
+}
+
+/* Community Grid Layout */
+.community-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+    padding: 0 1rem;
+}
+
+@media (max-width: 992px) {
+    .community-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Sidebar Styles */
+.create-post-card,
+.community-stats-card {
+    background: var(--card-bg);
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.card-header h3 {
+    font-size: 1.3rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-header h3 i {
+    color: #2ecc71;
+}
+
+/* Create Post Form */
+.create-post-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.form-group label i {
+    color: #3498db;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+    background: var(--input-bg);
+    color: var(--text-color);
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #2ecc71;
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.char-counter span {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Post Stats Preview */
+.post-stats-preview {
+    background: rgba(46, 204, 113, 0.05);
+    padding: 1.2rem;
+    border-radius: 10px;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+.post-stats-preview h4 {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-stats-preview h4 i {
+    color: #2ecc71;
+}
+
+.stats-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.stat-preview {
+    background: var(--card-bg);
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.stat-preview .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+.stat-preview .stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2ecc71;
+}
+
+/* Privacy Settings */
+.privacy-settings h4 {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.privacy-settings h4 i {
+    color: #3498db;
+}
+
+.privacy-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.privacy-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.privacy-option:hover {
+    border-color: #3498db;
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.privacy-option input[type="radio"] {
+    margin: 0;
+}
+
+.privacy-option i {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+}
+
+.privacy-option span {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.privacy-option small {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.privacy-option input:checked + i,
+.privacy-option input:checked ~ span,
+.privacy-option input:checked ~ small {
+    color: #2ecc71;
+}
+
+.privacy-option input:checked {
+    border-color: #2ecc71;
+}
+
+/* Post Actions */
+.post-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.post-actions .btn {
+    flex: 1;
+    padding: 0.8rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Community Stats */
+.community-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.community-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.community-stat-item .stat-icon {
+    font-size: 1.5rem;
+    color: #2ecc71;
+}
+
+.community-stat-item .stat-content .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.2rem;
+}
+
+.community-stat-item .stat-content .stat-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* Feed Styles */
+.community-feed {
+    background: var(--card-bg);
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+}
+
+.feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.feed-header h2 {
+    font-size: 1.5rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.feed-header h2 i {
+    color: #2ecc71;
+}
+
+.feed-filters {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.feed-filters select {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.feed-filters select:focus {
+    outline: none;
+    border-color: #2ecc71;
+}
+
+/* Posts Container */
+.posts-container {
+    min-height: 400px;
+}
+
+.empty-feed {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+}
+
+.empty-state h3 {
+    font-size: 1.8rem;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    color: var(--text-muted);
+}
+
+/* Post Card Styles */
+.post-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.2rem;
+}
+
+.post-actions-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.post-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.author-avatar {
+    font-size: 2.5rem;
+    color: #3498db;
+}
+
+.author-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.author-name {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+.post-time {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.post-privacy .privacy-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.privacy-badge.public {
+    background: rgba(46, 204, 113, 0.1);
+    color: #27ae60;
+}
+
+.privacy-badge.community {
+    background: rgba(52, 152, 219, 0.1);
+    color: #2980b9;
+}
+
+.privacy-badge.private {
+    background: rgba(149, 165, 166, 0.1);
+    color: #7f8c8d;
+}
+
+/* Post Options Menu */
+.post-options {
+    position: relative;
+}
+
+.more-options-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.more-options-btn:hover {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
+.post-options-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
+    z-index: 100;
+    display: none;
+    border: 1px solid var(--border-color);
+}
+
+.post-options-menu.show {
+    display: block;
+}
+
+.post-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.post-option:hover {
+    background: rgba(46, 204, 113, 0.05);
+}
+
+.post-option.delete-post-btn {
+    color: #e74c3c;
+}
+
+.post-option.delete-post-btn:hover {
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.post-option.edit-post-btn {
+    color: #3498db;
+}
+
+.post-option.edit-post-btn:hover {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.post-option.report-post-btn {
+    color: #f39c12;
+}
+
+.post-option.report-post-btn:hover {
+    background: rgba(243, 156, 18, 0.1);
+}
+
+.post-option i {
+    width: 20px;
+    text-align: center;
+}
+
+.post-content .post-message {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    white-space: pre-wrap;
+}
+
+.post-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(46, 204, 113, 0.05);
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.post-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.95rem;
+    color: var(--text-color);
+}
+
+.post-stat i {
+    color: #2ecc71;
+    font-size: 1.1rem;
+    width: 20px;
+}
+
+.post-stat strong {
+    color: #2ecc71;
+    font-weight: 700;
+}
+
+.post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.post-actions {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.post-action {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+}
+
+.post-action:hover {
+    color: #2ecc71;
+    background: rgba(46, 204, 113, 0.05);
+}
+
+.post-action.like-btn.liked {
+    color: #e74c3c;
+}
+
+.post-action.like-btn.liked i {
+    color: #e74c3c;
+}
+
+.post-action i {
+    font-size: 1.1rem;
+}
+
+.post-timestamp {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.comments-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.comment-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.comment-input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: var(--input-bg);
+    color: var(--text-color);
+}
+
+.comment-input:focus {
+    outline: none;
+    border-color: #2ecc71;
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.comment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.8rem;
+    background: rgba(46, 204, 113, 0.05);
+    border-radius: 8px;
+}
+
+.comment-avatar {
+    font-size: 1.5rem;
+    color: var(--text-muted);
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.3rem;
+}
+
+.comment-text {
+    color: var(--text-color);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.comment-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+    text-align: center;
+    padding: 3rem;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(46, 204, 113, 0.2);
+    border-top: 3px solid #2ecc71;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-indicator p {
+    color: var(--text-muted);
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast.error {
+    background: #e74c3c;
+}
+
+.toast.warning {
+    background: #f39c12;
+}
+
+.toast.info {
+    background: #3498db;
+}
+
+/* Delete Confirmation Modal */
+.delete-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.delete-modal-content {
+    background: var(--card-bg);
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    padding: 2rem;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.delete-modal-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.delete-modal-header i {
+    font-size: 3rem;
+    color: #e74c3c;
+    margin-bottom: 1rem;
+}
+
+.delete-modal-header h3 {
+    font-size: 1.5rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.delete-modal-header p {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.delete-modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.delete-modal-actions .btn {
+    flex: 1;
+    padding: 0.8rem;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-secondary {
+    background: var(--text-muted);
+    color: white;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background: var(--text-color);
+}
+
+/* Dark Theme Specific Fixes */
+[data-theme="dark"] .community-header h1,
+[data-theme="dark"] .card-header h3,
+[data-theme="dark"] .feed-header h2,
+[data-theme="dark"] .post-content .post-message,
+[data-theme="dark"] .post-stat,
+[data-theme="dark"] .comment-author,
+[data-theme="dark"] .comment-text,
+[data-theme="dark"] .delete-modal-header h3,
+[data-theme="dark"] .privacy-option span,
+[data-theme="dark"] .form-group label,
+[data-theme="dark"] .post-option {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .community-subtitle,
+[data-theme="dark"] .post-time,
+[data-theme="dark"] .post-timestamp,
+[data-theme="dark"] .comment-time,
+[data-theme="dark"] .char-counter,
+[data-theme="dark"] .stat-label,
+[data-theme="dark"] .delete-modal-header p,
+[data-theme="dark"] .privacy-option small {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .empty-state i,
+[data-theme="dark"] .empty-state h3,
+[data-theme="dark"] .empty-state p {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .author-avatar,
+[data-theme="dark"] .comment-avatar,
+[data-theme="dark"] .more-options-btn,
+[data-theme="dark"] .privacy-option i,
+[data-theme="dark"] .post-action {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .post-action:hover {
+    color: #2ecc71;
+}
+
+[data-theme="dark"] .post-action.like-btn.liked {
+    color: #e74c3c;
+}
+
+[data-theme="dark"] .feed-filters select,
+[data-theme="dark"] .comment-input {
+    background: var(--input-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .delete-modal {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+</style>
+
+<script>
+// ====== GLOBAL VARIABLES ======
+let currentUser = null;
+let posts = [];
+let postToDelete = null;
+
+// ====== USER MANAGEMENT ======
+
+// Get current user info
+function getCurrentUser() {
+    const container = document.querySelector('.community-container');
+    
+    if (container && container.dataset.userId && container.dataset.username) {
+        return {
+            id: container.dataset.userId,
+            username: container.dataset.username,
+            email: container.dataset.userEmail || '',
+            isLoggedIn: true
+        };
+    }
+    
+    return null;
+}
+
+// Check if user is logged in
+function isUserLoggedIn() {
+    return currentUser !== null && currentUser.isLoggedIn;
+}
+
+// Check if user is the author of a post
+function isUserAuthor(postUserId) {
+    return currentUser && currentUser.id === postUserId;
+}
+
+// ====== INITIALIZATION ======
+document.addEventListener('DOMContentLoaded', async function() {
+    // Get current user
+    currentUser = getCurrentUser();
+    
+    // Show/hide login prompt
+    if (!isUserLoggedIn()) {
+        const shareBtn = document.getElementById('sharePostBtn');
+        const draftBtn = document.getElementById('draftBtn');
+        if (shareBtn) shareBtn.style.display = 'none';
+        if (draftBtn) draftBtn.style.display = 'none';
+    }
+    
+    // Load posts from API
+    await loadPostsFromAPI();
+    
+    // Update community stats
+    await updateCommunityStats();
+    
+    // Setup event listeners
+    setupEventListeners();
+    
+    // Update character counter
+    updateCharCounter();
+});
+
+// ====== API FUNCTIONS ======
+
+// Load posts from API
+async function loadPostsFromAPI(filter = 'all') {
+    try {
+        showLoading(true);
+        
+        const response = await fetch(`/api/community/posts?filter=${filter}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            posts = data.posts || [];
+            displayPosts();
+        } else {
+            showToast('Failed to load posts: ' + (data.error || 'Unknown error'), 'error');
+            posts = [];
+            displayPosts();
+        }
+    } catch (error) {
+        console.error('Error loading posts:', error);
+        showToast('Failed to load posts. Please try again.', 'error');
+        posts = [];
+        displayPosts();
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Create a new post
+async function createPost() {
+    if (!isUserLoggedIn()) {
+        showToast('Please login to share posts.', 'error');
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 1500);
+        return;
+    }
+    
+    const message = document.getElementById('postMessage').value.trim();
+    const privacy = document.querySelector('input[name="privacy"]:checked').value;
+    
+    if (!message) {
+        showToast('Please enter a message for your post.', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/community/posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: message,
+                privacy: privacy
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Clear form
+            document.getElementById('postMessage').value = '';
+            updateCharCounter();
+            
+            // Reload posts
+            await loadPostsFromAPI();
+            await updateCommunityStats();
+            
+            showToast('Post shared successfully!', 'success');
+        } else {
+            showToast('Failed to create post: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error creating post:', error);
+        showToast('Failed to create post. Please try again.', 'error');
+    }
+}
+
+// Toggle like on a post
+async function toggleLike(postId) {
+    if (!isUserLoggedIn()) {
+        showToast('Please login to like posts.', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/community/posts/${postId}/like`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update the specific post in the UI
+            updatePostLikeUI(postId, data.liked, data.likes);
+        } else {
+            showToast('Failed to like post: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error toggling like:', error);
+        showToast('Failed to like post. Please try again.', 'error');
+    }
+}
+
+// Add comment to a post
+async function addComment(postId, text) {
+    const commentText = text.trim();
+    if (!commentText) return;
+    
+    if (!isUserLoggedIn()) {
+        showToast('Please login to comment.', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/community/posts/${postId}/comment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                text: commentText
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update the specific post in the UI
+            updatePostCommentUI(postId, data.comment);
+            showToast('Comment added!', 'success');
+        } else {
+            showToast('Failed to add comment: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        showToast('Failed to add comment. Please try again.', 'error');
+    }
+}
+
+// Delete a post
+async function deletePost(postId) {
+    if (!isUserLoggedIn()) {
+        showToast('Please login to delete posts.', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/community/posts/${postId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Remove the specific post from UI
+            removePostFromUI(postId);
+            
+            // Update community stats
+            await updateCommunityStats();
+            
+            showToast('Post deleted successfully.', 'success');
+        } else {
+            showToast('Failed to delete post: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting post:', error);
+        showToast('Failed to delete post. Please try again.', 'error');
+    }
+}
+
+// Report a post
+async function reportPost(postId) {
+    if (!isUserLoggedIn()) {
+        showToast('Please login to report posts.', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/community/posts/${postId}/report`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Post reported. Thank you for keeping the community safe!', 'success');
+        } else {
+            showToast('Failed to report post: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error reporting post:', error);
+        showToast('Failed to report post. Please try again.', 'error');
+    }
+}
+
+// Get community statistics
+async function updateCommunityStats() {
+    try {
+        const response = await fetch('/api/community/stats');
+        const data = await response.json();
+        
+        if (data.success) {
+            const stats = data.stats;
+            document.getElementById('totalMembers').textContent = stats.total_members;
+            document.getElementById('totalPosts').textContent = stats.total_posts;
+            document.getElementById('avgCommunityScore').textContent = stats.avg_community_score;
+            document.getElementById('topStreak').textContent = stats.top_streak;
+        }
+    } catch (error) {
+        console.error('Error loading community stats:', error);
+    }
+}
+
+// ====== UI UPDATE FUNCTIONS ======
+
+// Display posts in feed
+function displayPosts() {
+    const postsContainer = document.getElementById('postsContainer');
+    const emptyFeed = document.getElementById('emptyFeed');
+    
+    // Clear existing posts
+    postsContainer.innerHTML = '';
+    
+    if (posts.length === 0) {
+        emptyFeed.style.display = 'block';
+        postsContainer.appendChild(emptyFeed);
+        return;
+    }
+    
+    emptyFeed.style.display = 'none';
+    
+    // Display each post
+    posts.forEach(post => {
+        const postElement = createPostElement(post);
+        postsContainer.appendChild(postElement);
+    });
+}
+
+// Create post element from template
+function createPostElement(post) {
+    const template = document.getElementById('postTemplate');
+    const postElement = template.content.cloneNode(true);
+    
+    // Fill in post data
+    const postCard = postElement.querySelector('.post-card');
+    postCard.dataset.postId = post.id;
+    
+    // Author info
+    const authorName = postElement.querySelector('.author-name');
+    authorName.textContent = post.username || 'Anonymous';
+    
+    // Post time
+    const postTime = postElement.querySelector('.post-time');
+    const timestamp = postElement.querySelector('.post-timestamp span');
+    const timeText = formatTimeAgo(post.created_at);
+    postTime.textContent = timeText;
+    timestamp.textContent = timeText;
+    
+    // Privacy badge
+    const privacyBadge = postElement.querySelector('.privacy-badge');
+    privacyBadge.className = `privacy-badge ${post.privacy}`;
+    privacyBadge.innerHTML = getPrivacyIcon(post.privacy) + ' ' + post.privacy.charAt(0).toUpperCase() + post.privacy.slice(1);
+    
+    // Post message
+    const postMessage = postElement.querySelector('.post-message');
+    postMessage.textContent = post.message;
+    
+    // Post stats
+    const stats = postElement.querySelectorAll('.post-stat strong');
+    if (stats[0]) stats[0].textContent = post.best_score || 0;
+    if (stats[1]) stats[1].textContent = post.current_streak || 0;
+    if (stats[2]) stats[2].textContent = post.avg_score || 0;
+    if (stats[3]) stats[3].textContent = post.total_days || 0;
+    
+    // Like count
+    const likeCount = postElement.querySelector('.like-count');
+    likeCount.textContent = post.likes || 0;
+    
+    // Comment count
+    const commentCount = postElement.querySelector('.comment-count');
+    commentCount.textContent = post.comments ? post.comments.length : 0;
+    
+    // Check if current user is the author
+    const isAuthor = isUserAuthor(post.user_id);
+    
+    // Show/hide delete button based on authorship
+    const postOptionsMenu = postElement.querySelector('.post-options-menu');
+    const deleteBtn = postElement.querySelector('.delete-post-btn');
+    const editBtn = postElement.querySelector('.edit-post-btn');
+    const moreOptionsBtn = postElement.querySelector('.more-options-btn');
+    
+    if (isAuthor) {
+        deleteBtn.style.display = 'flex';
+        editBtn.style.display = 'flex';
+    } else {
+        deleteBtn.style.display = 'none';
+        editBtn.style.display = 'none';
+    }
+    
+    // Setup event listeners for options menu
+    moreOptionsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isVisible = postOptionsMenu.classList.contains('show');
+        
+        // Close all other open menus
+        document.querySelectorAll('.post-options-menu.show').forEach(menu => {
+            if (menu !== postOptionsMenu) {
+                menu.classList.remove('show');
+            }
+        });
+        
+        postOptionsMenu.classList.toggle('show');
+    });
+    
+    // Setup delete button
+    deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showDeleteConfirmation(post.id);
+        postOptionsMenu.classList.remove('show');
+    });
+    
+    // Setup edit button
+    editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        editPost(post.id);
+        postOptionsMenu.classList.remove('show');
+    });
+    
+    // Setup report button
+    const reportBtn = postElement.querySelector('.report-post-btn');
+    reportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        reportPost(post.id);
+        postOptionsMenu.classList.remove('show');
+    });
+    
+    // Setup event listeners for post interactions
+    const likeBtn = postElement.querySelector('.like-btn');
+    const commentBtn = postElement.querySelector('.comment-btn');
+    const shareBtn = postElement.querySelector('.share-btn');
+    
+    likeBtn.addEventListener('click', () => toggleLike(post.id));
+    commentBtn.addEventListener('click', () => toggleComments(post.id));
+    shareBtn.addEventListener('click', () => sharePost(post.id));
+    
+    // Check if user already liked this post
+    if (currentUser && post.user_liked) {
+        likeBtn.classList.add('liked');
+        likeBtn.querySelector('i').className = 'fas fa-heart';
+    }
+    
+    // Add existing comments
+    if (post.comments && post.comments.length > 0) {
+        const commentsList = postElement.querySelector('.comments-list');
+        post.comments.forEach(comment => {
+            const commentElement = createCommentElement(comment);
+            commentsList.appendChild(commentElement);
+        });
+    }
+    
+    // Comment form
+    const commentForm = postElement.querySelector('.comment-form');
+    const commentInput = postElement.querySelector('.comment-input');
+    const commentSubmit = postElement.querySelector('.comment-submit');
+    
+    commentSubmit.addEventListener('click', () => {
+        addComment(post.id, commentInput.value);
+        commentInput.value = '';
+    });
+    
+    commentInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            addComment(post.id, commentInput.value);
+            commentInput.value = '';
+        }
+    });
+    
+    // Close options menu when clicking outside
+    document.addEventListener('click', () => {
+        postOptionsMenu.classList.remove('show');
+    });
+    
+    return postElement;
+}
+
+// Create comment element
+function createCommentElement(comment) {
+    const commentDiv = document.createElement('div');
+    commentDiv.className = 'comment-item';
+    
+    commentDiv.innerHTML = `
+        <div class="comment-avatar">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="comment-content">
+            <div class="comment-author">${comment.username || 'Anonymous'}</div>
+            <div class="comment-text">${comment.text}</div>
+            <div class="comment-time">${formatTimeAgo(comment.timestamp)}</div>
+        </div>
+    `;
+    
+    return commentDiv;
+}
+
+// Update like UI for a specific post
+function updatePostLikeUI(postId, isLiked, likeCount) {
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    if (!postElement) return;
+    
+    const likeBtn = postElement.querySelector('.like-btn');
+    const likeCountElement = postElement.querySelector('.like-count');
+    
+    if (isLiked) {
+        likeBtn.classList.add('liked');
+        likeBtn.querySelector('i').className = 'fas fa-heart';
+    } else {
+        likeBtn.classList.remove('liked');
+        likeBtn.querySelector('i').className = 'far fa-heart';
+    }
+    
+    likeCountElement.textContent = likeCount;
+}
+
+// Update comment UI for a specific post
+function updatePostCommentUI(postId, newComment) {
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    if (!postElement) return;
+    
+    const commentsList = postElement.querySelector('.comments-list');
+    const commentCountElement = postElement.querySelector('.comment-count');
+    
+    // Add new comment
+    const commentElement = createCommentElement(newComment);
+    commentsList.appendChild(commentElement);
+    
+    // Update comment count
+    const currentCount = parseInt(commentCountElement.textContent) || 0;
+    commentCountElement.textContent = currentCount + 1;
+    
+    // Ensure comments section is visible
+    const commentsSection = postElement.querySelector('.comments-section');
+    commentsSection.style.display = 'block';
+}
+
+// Remove a specific post from UI
+function removePostFromUI(postId) {
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    if (postElement) {
+        postElement.remove();
+    }
+    
+    // Update posts array
+    posts = posts.filter(post => post.id !== postId);
+    
+    // Check if no posts left
+    if (posts.length === 0) {
+        const postsContainer = document.getElementById('postsContainer');
+        const emptyFeed = document.getElementById('emptyFeed');
+        emptyFeed.style.display = 'block';
+        postsContainer.appendChild(emptyFeed);
+    }
+}
+
+// ====== DELETE CONFIRMATION MODAL ======
+
+// Show delete confirmation modal
+function showDeleteConfirmation(postId) {
+    postToDelete = postId;
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.style.display = 'flex';
+}
+
+// Hide delete confirmation modal
+function hideDeleteConfirmation() {
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.style.display = 'none';
+    postToDelete = null;
+}
+
+// Confirm and delete post
+async function confirmDeletePost() {
+    if (!postToDelete) return;
+    
+    await deletePost(postToDelete);
+    hideDeleteConfirmation();
+}
+
+// ====== UTILITY FUNCTIONS ======
+
+// Format time ago
+function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const postDate = new Date(timestamp);
+    const seconds = Math.floor((now - postDate) / 1000);
+    
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    
+    return postDate.toLocaleDateString();
+}
+
+// Get privacy icon
+function getPrivacyIcon(privacy) {
+    switch(privacy) {
+        case 'public': return '<i class="fas fa-globe-americas"></i>';
+        case 'community': return '<i class="fas fa-users"></i>';
+        case 'private': return '<i class="fas fa-lock"></i>';
+        default: return '<i class="fas fa-globe-americas"></i>';
+    }
+}
+
+// Show/hide loading indicator
+function showLoading(show) {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = show ? 'block' : 'none';
+    }
+}
+
+// Toggle comments section
+function toggleComments(postId) {
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    if (!postElement) return;
+    
+    const commentsSection = postElement.querySelector('.comments-section');
+    const isVisible = commentsSection.style.display !== 'none';
+    
+    commentsSection.style.display = isVisible ? 'none' : 'block';
+    
+    if (!isVisible) {
+        const commentInput = commentsSection.querySelector('.comment-input');
+        commentInput.focus();
+    }
+}
+
+// Share post (copy link)
+function sharePost(postId) {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    
+    const shareText = `Check out my eco-progress on GreenHabit! "${post.message.substring(0, 100)}..."`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'GreenHabit Post',
+            text: shareText,
+            url: window.location.href
+        });
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareText)
+            .then(() => showToast('Post text copied to clipboard!', 'success'))
+            .catch(() => showToast('Failed to copy text.', 'error'));
+    } else {
+        showToast('Sharing not supported on this device.', 'warning');
+    }
+}
+
+// Edit post (placeholder)
+function editPost(postId) {
+    showToast('Edit feature coming soon!', 'info');
+}
+
+// ====== EVENT LISTENERS ======
+
+// Setup event listeners
+function setupEventListeners() {
+    // Share post button
+    const sharePostBtn = document.getElementById('sharePostBtn');
+    if (sharePostBtn) {
+        sharePostBtn.addEventListener('click', createPost);
+    }
+    
+    // Save draft button
+    const draftBtn = document.getElementById('draftBtn');
+    if (draftBtn) {
+        draftBtn.addEventListener('click', saveDraft);
+    }
+    
+    // Character counter
+    const postMessage = document.getElementById('postMessage');
+    if (postMessage) {
+        postMessage.addEventListener('input', updateCharCounter);
+    }
+    
+    // Feed filter
+    const feedFilter = document.getElementById('feedFilter');
+    if (feedFilter) {
+        feedFilter.addEventListener('change', function() {
+            loadPostsFromAPI(this.value);
+        });
+    }
+    
+    // Refresh feed button
+    const refreshFeed = document.getElementById('refreshFeed');
+    if (refreshFeed) {
+        refreshFeed.addEventListener('click', () => {
+            const currentFilter = document.getElementById('feedFilter').value;
+            loadPostsFromAPI(currentFilter);
+            updateCommunityStats();
+            showToast('Feed refreshed!', 'success');
+        });
+    }
+    
+    // Delete modal buttons
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const deleteModal = document.getElementById('deleteModal');
+    
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', hideDeleteConfirmation);
+    }
+    
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', confirmDeletePost);
+    }
+    
+    if (deleteModal) {
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) {
+                hideDeleteConfirmation();
+            }
+        });
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideDeleteConfirmation();
+        }
+    });
+}
+
+// Update character counter
+function updateCharCounter() {
+    const textarea = document.getElementById('postMessage');
+    if (!textarea) return;
+    
+    const charCount = document.getElementById('charCount');
+    const count = textarea.value.length;
+    charCount.textContent = count;
+    
+    if (count > 450) {
+        charCount.style.color = '#e74c3c';
+    } else if (count > 400) {
+        charCount.style.color = '#f39c12';
+    } else {
+        charCount.style.color = 'var(--text-color)';
+    }
+}
+
+// Save draft (local storage only)
+function saveDraft() {
+    if (!isUserLoggedIn()) {
+        showToast('Please login to save drafts.', 'error');
+        return;
+    }
+    
+    const message = document.getElementById('postMessage').value.trim();
+    const privacy = document.querySelector('input[name="privacy"]:checked').value;
+    
+    if (!message) {
+        showToast('Draft is empty.', 'warning');
+        return;
+    }
+    
+    // Get existing drafts
+    let drafts = JSON.parse(localStorage.getItem('greenhabit_drafts') || '[]');
+    
+    const draft = {
+        id: Date.now().toString(),
+        message: message,
+        privacy: privacy,
+        timestamp: new Date().toISOString()
+    };
+    
+    drafts.push(draft);
+    localStorage.setItem('greenhabit_drafts', JSON.stringify(drafts));
+    
+    showToast('Draft saved!', 'success');
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.toast');
+    existingToasts.forEach(toast => toast.remove());
+    
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let icon = 'check-circle';
+    if (type === 'error') icon = 'exclamation-circle';
+    if (type === 'warning') icon = 'exclamation-triangle';
+    if (type === 'info') icon = 'info-circle';
+    
+    toast.innerHTML = `
+        <i class="fas fa-${icon}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}
